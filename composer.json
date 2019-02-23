@@ -1,5 +1,5 @@
 {
-    "name": "Kilmas/Gxclient",
+    "name": "kilmas/gxcrpc",
     "description": "PHP SDK for the GXC RPC API",
     "type": "library",
     "keywords": ["php","gxc","rpc","sdk","api","crypto","blockchain"],
