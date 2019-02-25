@@ -15,16 +15,18 @@ $client->transfer("biteweidu2", "test", "1 GXC", true);
 
 $client->vote(["biteweidu1", "zhuliting"],"GXC", true);
 
+// callContract
 $client->callContract($contract_name = "test", "transfer", $param = ['memo' => ""], "", true);
 
-
+// createContract
 $client->createContract($contract_name = "testtest1111", $code = "", $abi = [], "0", "0", true);
 
+// updateContract
 $client->updateContract($contract_name = "testtest1111", null, $code, $abi, true);
 
-echo $api->getInfo() . PHP_EOL;
-echo $api->getObject(1) . PHP_EOL;
-echo $api->getObjects([1, 2, 3]);
-echo $api->getAccount($account_id_or_name) . PHP_EOL;
+// same as gxclient-node
+$client->getChainID();
+$client->getObject(1);
+$client->getObjects([1, 2, 3]);
+$client->getAccount($account_id_or_name);
 
-// as js

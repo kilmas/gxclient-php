@@ -2,7 +2,7 @@
 
 A PHP wrapper for the GXC Chain RPC API.
 
-## Background
+## Docs
 
 You can check out the [official docs](https://gxchain.github.io/gxclient-node/api/) but 
 beware that some of the newer methods are missing. Also, some of the examples in those 
@@ -11,16 +11,7 @@ docs use outdated syntax `(╯°□°）╯︵ ┻━┻`
 ## Installing
 
 ```php
-composer require Kilmas/GxcRpc
-```
-
-## Configuration
-
-Create a dotenv `.env` file in the project root, with your favourite RPC API host. You can use
-`.env.example` as a template:
-
-```
-cp .env.example .env
+composer require kilmas/gxcrpc
 ```
 
 ## Usage
@@ -32,40 +23,55 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 use Kilmas\GxcRpc\GXClient;
 
-
+// your private_key
 $private_key = "5KXXXX...";
+// your account
 $account_id_or_name = "biteweidu1";
 $entry_point = "wss://testnet.gxchain.org";
+$broadcast = true;
 
 $client = new GXClient($private_key, $account_id_or_name, $entry_point);
 
+// transfer
 $client->transfer("biteweidu2", "test", "1 GXC", true);
+
+// vote
+$client->vote(["biteweidu1", "zhuliting"],"GXC", true);
+
+/**
+ * deploy smart contract
+ * @param $contract_name
+ * @param $code hex data as "0061736d010000000197..."
+ * @param $abi json
+ * @param $vm_type
+ * @param $vm_version
+ * @param $broadcast
+ * @return mixed
+ */
+$client->createContract($contract_name = "contract_name", $code = "", $abi = [], "0", "0", $broadcast);
+
+// updateContract
+$client->updateContract($contract_name = "contract_name", null, $code = "", $abi, true);
+
+// callContract
+$client->callContract($contract_name = "contract_name", $method = "transfer", $param = ['memo' => ""], $amount_asset = "1 GXC", $broadcast);
+
+// same as gxclient-node
+$client->getChainID();
+$client->getObject(1);
+$client->getObjects([1, 2, 3]);
+$client->getAccount($account_id_or_name);
 ```
-
-## Examples
-
-To get you started, there is a simple example runner which covers all API commands.
-
-Just run this via cli to see example output for all commands:
-
-```
-cd examples
-php chain.php
-```
-
-## API Methods
-
-All read only Chain API methods are covered.
 
 ### Get Info
 
-same as js, but not async, all rpc are sync 
+All read only Chain API methods same as js, but not async, all rpc are sync
+
+[gxclient-node/api](https://gxchain.github.io/gxclient-node/api/) 
 
 ## Contributing
 
 All contributions are welcome! GXC TO DA MOON!!!
-
-
 
 ## License
 
