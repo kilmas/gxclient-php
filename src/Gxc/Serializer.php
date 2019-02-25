@@ -39,9 +39,6 @@ class Serializer
                 $field = $iterable[$i];
                 $type = $this->types[$field];
                 try {
-//                    if (is_string($type)) {
-//                        $type = ops::serializer($type);
-//                    }
                     $object[$field] = $type->fromByteBuffer($b);
                 } catch (\Exception $e) {
                     throwException($e->getMessage());
@@ -116,9 +113,6 @@ class Serializer
             for ($i = 0; $i < count($iterable); $i++) {
                 $field = $iterable[$i];
                 $type = $this->types[$field];
-//                if (is_string($type)) {
-//                    $type = ops::serializer($type);
-//                }
                 if ($serialized_object == null) {
                     $_field = null;
                 } elseif (is_object($serialized_object)) {
@@ -175,7 +169,6 @@ class Serializer
         // return this.toBuffer(object).toString("hex")
         $b = $this->toByteBuffer($object);
         return bin2hex($b->pack);
-        // return $b::toHex();
     }
 
     function toByteBuffer($object)
@@ -183,13 +176,11 @@ class Serializer
         $b = new ByteBuffer(ByteBuffer::DEFAULT_CAPACITY, ByteBuffer::LITTLE_ENDIAN);
         $this->appendByteBuffer($b, $object);
         return $b->pack;
-        // return $b->copy(0, $b::offset);
     }
 
     function toBuffer($object)
     {
         return $this->toByteBuffer($object);
-        // return new Buffer($this->toByteBuffer($object) . toBinary(), 'binary');
     }
 
 }
