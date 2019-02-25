@@ -1,6 +1,3 @@
-## Remind
-Prepare for transfer to official maintenance [gxchain/gxclient-php](https://github.com/gxchain/gxclient-php/)
-
 # The PHP SDK for the GXC RPC API
 
 A PHP wrapper for the GXC Chain RPC API.
