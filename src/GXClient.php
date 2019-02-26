@@ -64,10 +64,13 @@ class GXClient
      * @param $brainKey
      * @return array [brainKey: *, privateKey: *, publicKey: *]
      */
-    function generateKey($brainKey)
-    {
+    function generateKey($brainKey = '')
+    {   
         $ec = new EC('secp256k1');
-        $brainKey = $brainKey || $kp = $ec->genKeyPair();
+        
+        if ($brainKey === '') {
+            $brainKey = Ecc::suggestBrainKey();
+        }
         $privateKey = Ecc::seedPrivate($brainKey);;
         $publicKey = Ecc::privateToPublic($privateKey, 'GXC');
         return [
