@@ -6,11 +6,11 @@
  * Time: 18:43
  */
 
-namespace Kilmas\GxcRpc;
+namespace GXChain\GXClient;
 
-use Kilmas\GxcRpc\Gxc\Operations as ops;
-use Kilmas\GxcRpc\Gxc\Chain\ChainTypes;
-use Kilmas\GxcRpc\Ecc\Signature;
+use GXChain\GXClient\Gxc\Operations as ops;
+use GXChain\GXClient\Gxc\Chain\ChainTypes;
+use GXChain\GXClient\Ecc\Signature;
 
 class TransactionBuilder
 {

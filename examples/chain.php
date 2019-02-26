@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/vendor/autoload.php';
 
-use Kilmas\GxcRpc\GXClient;
+use GXChain\GXClient\GXClient;
 
 
 $private_key = "5KXXXX...";

@@ -1,9 +1,9 @@
 <?php
 
-namespace Kilmas\GxcRpc\Adapter\Settings;
+namespace GXChain\GXClient\Adapter\Settings;
 
-use Kilmas\GxcRpc\Exception\SettingsException;
-use Kilmas\GxcRpc\Exception\SettingsNotFoundException;
+use GXChain\GXClient\Exception\SettingsException;
+use GXChain\GXClient\Exception\SettingsNotFoundException;
 use Dotenv\Dotenv;
 
 /**

@@ -6,12 +6,12 @@
  * Time: 23:57
  */
 
-namespace Kilmas\GxcRpc\Gxc;
+namespace GXChain\GXClient\Gxc;
 
-use Kilmas\GxcRpc\Gxc\SerializerValidation as v;
-use Kilmas\GxcRpc\Gxc\Chain\ChainTypes;
-use Kilmas\GxcRpc\Gxc\Chain\ObjectId;
-use Kilmas\GxcRpc\Ecc\Utils;
+use GXChain\GXClient\Gxc\SerializerValidation as v;
+use GXChain\GXClient\Gxc\Chain\ChainTypes;
+use GXChain\GXClient\Gxc\Chain\ObjectId;
+use GXChain\GXClient\Ecc\Utils;
 
 class Types
 {

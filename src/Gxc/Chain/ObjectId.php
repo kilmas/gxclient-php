@@ -6,9 +6,9 @@
  * Time: 20:19
  */
 
-namespace Kilmas\GxcRpc\Gxc\Chain;
+namespace GXChain\GXClient\Gxc\Chain;
 
-use Kilmas\GxcRpc\Gxc\SerializerValidation as v;
+use GXChain\GXClient\Gxc\SerializerValidation as v;
 
 class ObjectId
 {

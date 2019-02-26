@@ -6,7 +6,7 @@
  * Time: 13:52
  */
 
-namespace Kilmas\GxcRpc\Ecc;
+namespace GXChain\GXClient\Ecc;
 
 use Elliptic\EC\Signature as ECSignature;
 use Elliptic\HmacDRBG;

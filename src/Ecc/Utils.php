@@ -6,7 +6,7 @@
  * Time: 13:45
  */
 
-namespace Kilmas\GxcRpc\Ecc;
+namespace GXChain\GXClient\Ecc;
 
 use StephenHill\Base58;
 

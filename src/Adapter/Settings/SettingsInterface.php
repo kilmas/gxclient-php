@@ -1,6 +1,6 @@
 <?php
 
-namespace Kilmas\GxcRpc\Adapter\Settings;
+namespace GXChain\GXClient\Adapter\Settings;
 
 interface SettingsInterface
 {

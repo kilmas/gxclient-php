@@ -12,9 +12,9 @@
  * Validations support a string format for dealing with large numbers.
  */
 
-namespace Kilmas\GxcRpc\Gxc;
+namespace GXChain\GXClient\Gxc;
 
-use Kilmas\GxcRpc\Gxc\Chain\ChainTypes;
+use GXChain\GXClient\Gxc\Chain\ChainTypes;
 
 class SerializerValidation
 {

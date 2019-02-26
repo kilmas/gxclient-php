@@ -6,7 +6,7 @@
  * Time: 10:18
  */
 
-namespace Kilmas\GxcRpc\Gxc;
+namespace GXChain\GXClient\Gxc;
 
 class ByteBuffer
 {

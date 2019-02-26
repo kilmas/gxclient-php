@@ -1,9 +1,9 @@
 {
-    "name": "kilmas/gxcrpc",
+    "name": "gxchain/gxclient",
     "description": "PHP SDK for the GXC RPC API",
     "type": "library",
-    "keywords": ["php","gxc","rpc","sdk","api","crypto","blockchain"],
-    "homepage": "https://github.com/kilmas/gxclient-php",
+    "keywords": ["php","gxclient","gxc","rpc","sdk","api","crypto","blockchain"],
+    "homepage": "https://github.com/gxchain/gxclient-php",
     "license": "MIT",
     "authors": [
         {
@@ -26,10 +26,10 @@
         "phpmetrics/phpmetrics": "^2.2"
     },
     "autoload": {
-        "psr-4": {"Kilmas\\GxcRpc\\": ["src/"]}
+        "psr-4": {"GXChain\\GXClient\\": ["src/"]}
     },
     "autoload-dev": {
-        "psr-4": {"Kilmas\\GxcRpc\\": ["tests/"]}
+        "psr-4": {"GXChain\\GXClient\\": ["tests/"]}
     },
     "scripts": {
         "post-root-package-install": [

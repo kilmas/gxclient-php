@@ -7,9 +7,7 @@
  */
 
 
-namespace Kilmas\GxcRpc\Gxc;
-
-use Kilmas\GxcRpc\Gxc\Operations as ops;
+namespace GXChain\GXClient\Gxc;
 
 class Serializer
 {
@@ -167,8 +165,9 @@ class Serializer
     function toHex($object)
     {
         // return this.toBuffer(object).toString("hex")
-        $b = $this->toByteBuffer($object);
-        return bin2hex($b->pack);
+        $b = new ByteBuffer(ByteBuffer::DEFAULT_CAPACITY, ByteBuffer::LITTLE_ENDIAN);
+        $this->appendByteBuffer($b, $object);
+        return $b->hex;
     }
 
     function toByteBuffer($object)
@@ -180,7 +179,9 @@ class Serializer
 
     function toBuffer($object)
     {
-        return $this->toByteBuffer($object);
+        $b = new ByteBuffer(ByteBuffer::DEFAULT_CAPACITY, ByteBuffer::LITTLE_ENDIAN);
+        $this->appendByteBuffer($b, $object);
+        return $b->pack;
     }
 
 }

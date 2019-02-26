@@ -11,7 +11,7 @@ docs use outdated syntax `(╯°□°）╯︵ ┻━┻`
 ## Installing
 
 ```php
-composer require kilmas/gxcrpc
+composer require gxchain/gxclient
 ```
 
 ## Usage
@@ -21,7 +21,7 @@ There is a shiny factory method to auto instantiate all dependencies:
 ```php
 require_once __DIR__ . '/vendor/autoload.php';
 
-use Kilmas\GxcRpc\GXClient;
+use GXChain\GXClient\GXClient;
 
 // your private_key
 $private_key = "5KXXXX...";

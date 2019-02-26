@@ -6,10 +6,10 @@
  * Time: 15:38
  */
 
-namespace Kilmas\GxcRpc;
+namespace GXChain\GXClient;
 
 use GuzzleHttp\Client as Guzzle;
-use Kilmas\GxcRpc\Exception\HttpException;
+use GXChain\GXClient\Exception\HttpException;
 
 class GxcRpc
 {
