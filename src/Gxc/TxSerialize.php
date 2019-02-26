@@ -1,9 +1,9 @@
 <?php
 
-namespace Kilmas\GxcRpc\Gxc;
+namespace GXChain\GXClient\Gxc;
 
-use Kilmas\GxcRpc\Gxc\Operations as ops;
-use Kilmas\GxcRpc\Gxc\Types as types;
+use GXChain\GXClient\Gxc\Operations as ops;
+use GXChain\GXClient\Gxc\Types as types;
 
 class TxSerialize
 {

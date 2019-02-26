@@ -6,7 +6,7 @@
  * Time=> 0=>55
  */
 
-namespace Kilmas\GxcRpc\Gxc\Chain;
+namespace GXChain\GXClient\Gxc\Chain;
 
 class ChainTypes
 {

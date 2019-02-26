@@ -6,7 +6,7 @@
  * Time=> 13=>31
  */
 
-namespace Kilmas\GxcRpc\Gxc;
+namespace GXChain\GXClient\Gxc;
 
 class Operations
 {

@@ -6,13 +6,13 @@
  * Time: 13:18
  */
 
-namespace Kilmas\GxcRpc;
+namespace GXChain\GXClient;
 
 use Elliptic\EC;
-use Kilmas\GxcRpc\Ecc\Ecc;
-use Kilmas\GxcRpc\Adapter\Http\HttpInterface;
-use Kilmas\GxcRpc\Ecc\Aes;
-use Kilmas\GxcRpc\Ecc\Utils;
+use GXChain\GXClient\Ecc\Ecc;
+use GXChain\GXClient\Adapter\Http\HttpInterface;
+use GXChain\GXClient\Ecc\Aes;
+use GXChain\GXClient\Ecc\Utils;
 
 class GXClient
 {
@@ -496,7 +496,7 @@ class GXClient
             $abi = $acc['abi'];
             $act = [
                 'method_name' => $method_name,
-                'data' => \Kilmas\GxcRpc\Gxc\TxSerialize::serializeCallData($method_name, $params, $abi)
+                'data' => \GXChain\GXClient\Gxc\TxSerialize::serializeCallData($method_name, $params, $abi)
             ];
 
             $tr = $this->_createTransaction();

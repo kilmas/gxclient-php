@@ -1,6 +1,6 @@
 <?php
 
-use Kilmas\GxcRpc\GXClient;
+use GXChain\GXClient\GXClient;
 
 class GXClientTest extends PHPUnit_Framework_TestCase
 {

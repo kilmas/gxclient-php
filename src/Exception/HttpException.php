@@ -1,6 +1,6 @@
 <?php
 
-namespace Kilmas\GxcRpc\Exception;
+namespace GXChain\GXClient\Exception;
 
 /**
  * Class HttpException

@@ -6,12 +6,12 @@
  * Time: 15:03
  */
 
-namespace Kilmas\GxcRpc;
+namespace GXChain\GXClient;
 
-use Kilmas\GxcRpc\Ecc\Signature;
+use GXChain\GXClient\Ecc\Signature;
 
-use Kilmas\GxcRpc\Gxc\Operations as ops;
-use Kilmas\GxcRpc\Gxc\Types;
+use GXChain\GXClient\Gxc\Operations as ops;
+use GXChain\GXClient\Gxc\Types;
 
 class TransactionHelper
 {

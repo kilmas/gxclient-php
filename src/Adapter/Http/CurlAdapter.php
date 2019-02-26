@@ -1,8 +1,8 @@
 <?php
 
-namespace Kilmas\GxcRpc\Adapter\Http;
+namespace GXChain\GXClient\Adapter\Http;
 
-use Kilmas\GxcRpc\Exception\HttpException;
+use GXChain\GXClient\Exception\HttpException;
 use Curl\Curl;
 
 /**

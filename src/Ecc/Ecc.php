@@ -5,7 +5,7 @@
  * Date: 2019/1/26
  * Time: 13:45
  */
-namespace Kilmas\GxcRpc\Ecc;
+namespace GXChain\GXClient\Ecc;
 use Elliptic\EC;
 
 class Ecc

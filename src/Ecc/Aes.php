@@ -6,7 +6,7 @@
  * Time: 17:21
  */
 
-namespace Kilmas\GxcRpc\Ecc;
+namespace GXChain\GXClient\Ecc;
 
 use Elliptic\EC;
 
