@@ -626,14 +626,13 @@ class GXClient
         $m = 0;
         $s1 = (string)$arg1;
         $s2 = (string)$arg2;
-        try {
-            $m += strlen(explode('.', $s1)[1]);
-        } catch (\Exception $e) {
-        }
-        try {
-            $m += strlen(explode(".", $s2)[1]);
-        } catch (\Exception $e) {
-        }
+
+        $arr = explode('.', $s1);
+        isset($arr[1]) ? $m += strlen($arr[1]) : 0;
+
+        $arr = explode('.', $s2);
+        isset($arr[1]) ? $m += strlen($arr[1]) : 0;
+
         return intval(str_replace(".", "", $s1)) * intval(str_replace(".", "", $s2)) / pow(10, $m);
     }
 
