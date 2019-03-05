@@ -70,7 +70,7 @@ class TransactionHelper
     static function template($serializer_operation_type_name, $debug = ['use_default' => true, 'annotate' => true])
     {
         if (!ops::serializer($serializer_operation_type_name)) {
-            throwException(`unknown serializer_operation_type {$serializer_operation_type_name}`);
+            throw new \Exception(`unknown serializer_operation_type {$serializer_operation_type_name}`);
         }
         $so = ops::serializer($serializer_operation_type_name);
         return $so->toObject(null, $debug);
@@ -79,7 +79,7 @@ class TransactionHelper
     static function new_operation($serializer_operation_type_name)
     {
         if (!ops::serializer($serializer_operation_type_name)) {
-            throwException(`unknown serializer_operation_type {$serializer_operation_type_name}`);
+            throw new \Exception(`unknown serializer_operation_type {$serializer_operation_type_name}`);
         }
         $so = ops::serializer($serializer_operation_type_name);
         $object = $so->toObject(null, ['use_default' => true, 'annotate' => true]);

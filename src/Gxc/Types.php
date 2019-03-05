@@ -221,19 +221,19 @@ class Types
     {
         $object = [
             'fromByteBuffer' => function ($b) {
-                throwException("(void) null type");
+                throw new \Exception("(void) null type");
             },
             'appendByteBuffer' => function ($b, $object) {
-                throwException("(void) null type");
+                throw new \Exception("(void) null type");
             },
             'fromObject' => function ($object) {
-                throwException("(void) null type");
+                throw new \Exception("(void) null type");
             },
             'toObject' => function ($object, $debug = []) {
                 if (!empty($debug['use_default']) && $object === null) {
                     return null;
                 }
-                throwException("(void) null type");
+                throw new \Exception("(void) null type");
             }];
         return self::a2o($object);
     }
@@ -294,7 +294,7 @@ class Types
             if (is_numeric($object))
                 return $object;
             if (!is_string($object))
-                throwException("Unknown date type: " + $object);
+                throw new \Exception("Unknown date type: " + $object);
 
             if (greg_match($object, "/T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]$/"))
                 $object = $object + "Z";
@@ -332,7 +332,7 @@ class Types
                 $o = $array[$i];
                 if (is_string($o) || is_numeric($o)) {
                     if (isset($dup_map[$o])) {
-                        throwException("duplicate (set)");
+                        throw new \Exception("duplicate (set)");
                     }
                     $dup_map[$o] = true;
                 }
@@ -696,18 +696,18 @@ class Types
     {
         $validate = function ($array) use ($key_st_operation, $value_st_operation) {
             if (!is_array($array)) {
-                throwException("expecting array");
+                throw new \Exception("expecting array");
             }
             $dup_map = [];
             for ($i = 0; $i < count($array); $i++) {
                 $o = $array[$i];
                 if (!(count($o) === 2)) {
-                    throwException("expecting two elements");
+                    throw new \Exception("expecting two elements");
                 }
                 $ref = $o[0];
                 if (in_array($ref, ["number", "string"])) {
                     if ($dup_map[$o[0]] !== null) {
-                        throwException("duplicate (map)");
+                        throw new \Exception("duplicate (map)");
                     }
                     $dup_map[$o[0]] = true;
                 }

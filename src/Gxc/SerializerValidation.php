@@ -29,7 +29,7 @@ class SerializerValidation
     static function required($value, $field_name = "")
     {
         if (self::is_empty($value)) {
-            throwException("value required {$field_name} {$value}");
+            throw new \Exception("value required {$field_name} {$value}");
         }
         return $value;
     }
@@ -37,7 +37,7 @@ class SerializerValidation
     static function require_long($value, $field_name = "")
     {
         if (!is_long($value)) {
-            throwException("Long$value required {$field_name} {$value}");
+            throw new \Exception("Long$value required {$field_name} {$value}");
         }
         return $value;
     }
@@ -48,7 +48,7 @@ class SerializerValidation
             return $value;
         }
         if (!is_string($value)) {
-            throwException("string required: {$value}");
+            throw new \Exception("string required: {$value}");
         }
         return $value;
     }
@@ -59,7 +59,7 @@ class SerializerValidation
             return $value;
         }
         if (!is_numeric($value)) {
-            throwException("number required: {$value}");
+            throw new \Exception("number required: {$value}");
         }
         return $value;
     }
@@ -70,7 +70,7 @@ class SerializerValidation
             return $value;
         }
         if (preg_match("/\./", $value)) {
-            throwException("whole number required {$field_name} {$value}");
+            throw new \Exception("whole number required {$field_name} {$value}");
         }
         return $value;
     }
@@ -81,7 +81,7 @@ class SerializerValidation
             return $value;
         }
         if (preg_match("/-/", $value)) {
-            throwException("unsigned required {$field_name} {$value}");
+            throw new \Exception("unsigned required {$field_name} {$value}");
         }
         return $value;
     }
@@ -146,7 +146,7 @@ class SerializerValidation
             return $value;
         }
         if (!preg_match($regex, $value)) {
-            throwException("unmatched ${regex} {$field_name} {$value}");
+            throw new \Exception("unmatched ${regex} {$field_name} {$value}");
         }
         return $value;
     }
@@ -158,7 +158,7 @@ class SerializerValidation
         }
         preg_match_all($regex, $value, $match);
         if ($match === null) {
-            throwException("unmatched {$regex} {$field_name} {$value}");
+            throw new \Exception("unmatched {$regex} {$field_name} {$value}");
         }
         return $match;
     }
@@ -180,7 +180,7 @@ class SerializerValidation
         }
         $number = self::to_number($value);
         if ($number < $min || $number > $max) {
-            throwException("out of range {$value} {$field_name} {$value}");
+            throw new \Exception("out of range {$value} {$field_name} {$value}");
         }
         return $value;
     }
@@ -192,10 +192,10 @@ class SerializerValidation
         }
         $object_type = ChainTypes::$object_type[$type];
         if (!$object_type) {
-            throwException("Unknown object$type ${type} {$field_name} {$value}");
+            throw new \Exception("Unknown object$type ${type} {$field_name} {$value}");
         }
         if (!preg_match("/{$reserved_spaces}\.{$object_type}\.[0-9]+$/", $value)) {
-            throwException("Expecting ${type} in format " . "{$reserved_spaces}.{$object_type}.[0-9]+ " . "instead of {$value} {$field_name} {$value}");
+            throw new \Exception("Expecting ${type} in format " . "{$reserved_spaces}.{$object_type}.[0-9]+ " . "instead of {$value} {$field_name} {$value}");
         }
         return $value;
     }
@@ -278,14 +278,14 @@ class SerializerValidation
     {
         if (is_numeric($value)) {
             if ($value > self::MAX_SAFE_INT || $value < self::MIN_SAFE_INT) {
-                throwException("overflow {$field_name} {$value}");
+                throw new \Exception("overflow {$field_name} {$value}");
             }
             return;
         }
         if (is_string($value)) {
             $int = intval($value);
             if ($int > self::MAX_SAFE_INT || $int < self::MIN_SAFE_INT) {
-                throwException("overflow {$field_name} {$value}");
+                throw new \Exception("overflow {$field_name} {$value}");
             }
             return;
         }
@@ -293,7 +293,7 @@ class SerializerValidation
             self::no_overflow53(intval($value), $field_name);
             return;
         }
-        throwException("unsupported type {$field_name}: ({$value}) ");
+        throw new \Exception("unsupported type {$field_name}: ({$value}) ");
     }
 
     // signed / unsigned whole numbers only
@@ -326,17 +326,17 @@ class SerializerValidation
             }
             $long_string = strval($value);
             if ($long_string !== trim($value)) {
-                throwException("overflow {$field_name} {$value}");
+                throw new \Exception("overflow {$field_name} {$value}");
             }
             return;
         }
         if (is_numeric($value)) {
             if ($value > self::MAX_SAFE_INT || $value < self::MIN_SAFE_INT) {
-                throwException("overflow {$field_name} {$value}");
+                throw new \Exception("overflow {$field_name} {$value}");
             }
             return;
         }
 
-        throwException("unsupported type {$field_name}: ({$value}) {$value}");
+        throw new \Exception("unsupported type {$field_name}: ({$value}) {$value}");
     }
 }

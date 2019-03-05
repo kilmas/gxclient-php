@@ -43,7 +43,7 @@ class GxcRpc
         }
 
         $arr = json_decode((string)$response->getBody(), true);
-        return isset($arr['result']) ? $arr['result'] : null;
+        return isset($arr['result']) ? $arr['result'] : $arr['error'];
     }
 
     function broadcast($tx)
@@ -59,7 +59,6 @@ class GxcRpc
             throw new HttpException("POST Request failed: {$t->getMessage()}");
         }
         $arr = json_decode((string)$response->getBody(), true);
-
-        return isset($arr['result']) ? $arr['result'] : null;
+        return isset($arr['result']) ? $arr['result'] : $arr['error'];
     }
 }
