@@ -43,7 +43,7 @@ class Signature
             $getNonce = $noncefn;
             $noncefn = function ($counter) use ($getNonce, $message, $privateKey, $data) {
                 $nonce = $getNonce($message, $privateKey, null, $data, $counter);
-                if (!is_string($nonce) || strlen($nonce) !== 64) throwException("messages.ECDSA_SIGN_FAIL");
+                if (!is_string($nonce) || strlen($nonce) !== 64) throw new \Exception("messages.ECDSA_SIGN_FAIL");
                 return new BN($nonce, 16);
             };
         }
