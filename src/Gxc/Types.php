@@ -313,12 +313,18 @@ class Types
             },
             'fromObject' => $fromObject,
             'toObject' => function ($object, $debug = []) {
+                // 设置交易过期时间，UTC时区
+                $default = date_default_timezone_get();
+                date_default_timezone_set('UTC');
                 if (!empty($debug['use_default']) && empty($object))
                     return date('Y-m-d\TH:i:s', time());
                 v::required($object);
                 $int = intval($object);
                 v::require_range(0, 0xFFFFFFFF, $int, "uint32 {$object}");
-                return date('Y-m-d\TH:i:s', $int);
+                $date = date('Y-m-d\TH:i:s', $int);
+                // 将时区设置回默认的
+                date_default_timezone_set($default);
+                return $date;
             }
         ];
         return self::a2o($object);

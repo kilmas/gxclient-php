@@ -61,4 +61,16 @@ class GxcRpc
         $arr = json_decode((string)$response->getBody(), true);
         return isset($arr['result']) ? $arr['result'] : $arr['error'];
     }
+
+    function register($faucet, $params)
+    {
+        try {
+            $response = $this->client->post($faucet . '/account/register', ['headers' => ['Accept' => 'application/json'], 'json' => $params]);
+        } catch (\Exception $t) {
+            throw new HttpException("POST Request failed: {$t->getMessage()}");
+        }
+
+        $arr = json_decode((string)$response->getBody(), true);
+        return $arr;
+    }
 }

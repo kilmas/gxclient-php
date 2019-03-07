@@ -126,15 +126,12 @@ class GXClient
         if (!$activeKey) {
             throw new \Exception("active key is required");
         } else {
-            $resp = $this->client->post(`${faucet}/account/register`, [
-                'account' => [
-                    'name' => $account,
-                    'active_key' => $activeKey,
-                    'owner_key' => $ownerKey || $activeKey,
-                    'memo_key' => $memoKey || $activeKey
-                ]
-            ]);
-            return $resp;
+            return $this->client->register($faucet, ['account' => [
+                'name' => $account,
+                'active_key' => $activeKey,
+                'owner_key' => $ownerKey ? $ownerKey : $activeKey,
+                'memo_key' => $memoKey ? $memoKey : $activeKey
+            ]]);
         }
     }
 
@@ -540,9 +537,9 @@ class GXClient
         if ($this->_connect()) {
             $_accounts = [];
             foreach ($accounts as $a) {
-                $_account = $this->getAccount($a);
+                $_account = $this->getObject($a);
                 $_accounts[] = $_account;
-                $account_ids [] = $_account['id'];
+                $account_ids[] = $_account['id'];
             }
             $accs = $this->_query("get_objects", [[$this->account_id, "2.0.0"]]);
             $acc = $accs[0];
@@ -559,21 +556,24 @@ class GXClient
                 'memo_key' => $acc['options']['memo_key'],
                 'voting_account' => empty($acc['options']['voting_account']) ? "1.2.5" : $acc['options']['voting_account']
             ];
-            $results = [];
             $votes = [];
+            $res1 = [];
+            $res2 = [];
             foreach ($account_ids as $account_id) {
-                $results = $this->_query("get_witness_by_account", [$account_id]);
-                $v = $this->_query("get_committee_member_by_account", [$account_id]);
-                $votes[] = $v['vote_id'];
+                $res1[] = $this->_query("get_witness_by_account", [$account_id]);
+                $res2[] = $this->_query("get_committee_member_by_account", [$account_id]);
             }
+            $votes = array_merge($res1, $res2);
+            $votes = array_filter($votes);
+            $votes = array_map(function ($v) {
+                return $v['vote_id'];
+            }, $votes);
             $new_options['votes'] = array_unique(array_merge($votes, $acc['options']['votes']));
-
-
             $num_witness = 0;
             $num_committee = 0;
             foreach ($new_options['votes'] as $v) {
                 $vote_type = explode(":", $v)[0];
-                if ($vote_type == "0") {
+                if ($vote_type == 0) {
                     $num_committee += 1;
                 }
                 if ($vote_type == 1) {
@@ -698,7 +698,7 @@ class GXClient
         $tr->update_head_block();
         $tr->set_required_fees();
         if (!$this->signProvider) {
-            $this->private_key && $tr->add_signer(Ecc::wifPrivateToPrivateHex($this->private_key));
+            $this->private_key && $tr->add_signer($this->private_key);
         }
         $tr->set_expire_seconds(self::DEFUALT_EXPIRE_SEC);
         if ($broadcast) {

@@ -11,6 +11,7 @@ namespace GXChain\GXClient;
 use GXChain\GXClient\Gxc\Operations as ops;
 use GXChain\GXClient\Gxc\Chain\ChainTypes;
 use GXChain\GXClient\Ecc\Signature;
+use GXChain\GXClient\Ecc\Ecc;
 
 class TransactionBuilder
 {
@@ -487,7 +488,9 @@ class TransactionBuilder
     private function timeStringToDate($time_string)
     {
         if (!$time_string)
-            return strtotime("1970-01-01 00:00:00");
+            return strtotime("1970-01-01T00:00:00.000Z");
+        if ($time[strlen($time) -1] != "Z")
+            $time_string = $time_string . "Z";
         return strtotime($time_string);
     }
 }
