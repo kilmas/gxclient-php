@@ -1,80 +1,121 @@
-# The PHP SDK for the GXC RPC API
+# gxclient-php
+A client to interact with gxchain implemented in PHP
+<p>
+ <a href='javascript:;'>
+   <img width="300px" src='https://raw.githubusercontent.com/gxchain/gxips/master/assets/images/task-gxclient.png'/>
+ </a>
+ <a href='javascript:;'>
+   <img width="300px" src='https://raw.githubusercontent.com/gxchain/gxips/master/assets/images/task-gxclient-en.png'/>
+ </a>
+</p> 
 
-A PHP wrapper for the GXC Chain RPC API.
+# Supported Versions
+PHP7.0
 
-## Docs
+# Install
 
-You can check out the [official docs](https://gxchain.github.io/gxclient-node/api/) but 
-beware that some of the newer methods are missing. Also, some of the examples in those 
-docs use outdated syntax `(╯°□°）╯︵ ┻━┻`
+You can install this library via Composer:
 
-## Installing
-
-```php
+```
 composer require gxchain/gxclient
 ```
+# APIs
+- [x] [Keypair API](#keypair-api)
+- [x] [Chain API](#chain-api)
+- [x] [Faucet API](#faucet-api)
+- [x] [Account API](#account-api)
+- [x] [Asset API](#asset-api)
+- [x] [Contract API](#contract-api)
 
-## Usage
 
-There is a shiny factory method to auto instantiate all dependencies: 
+## Constructors
 
-```php
-require_once __DIR__ . '/vendor/autoload.php';
-
-use GXChain\GXClient\GXClient;
-
-// your private_key
-$private_key = "5KXXXX...";
-// your account
-$account_id_or_name = "biteweidu1";
-$entry_point = "wss://testnet.gxchain.org";
-$broadcast = true;
-
-$client = new GXClient($private_key, $account_id_or_name, $entry_point);
-
-// transfer
-$client->transfer("biteweidu2", "test", "1 GXC", true);
-
-// vote
-$client->vote(["biteweidu1", "zhuliting"],"GXC", true);
-
-/**
- * deploy smart contract
- * @param $contract_name
- * @param $code hex data as "0061736d010000000197..."
- * @param $abi json
- * @param $vm_type
- * @param $vm_version
- * @param $broadcast
- * @return mixed
- */
-$client->createContract($contract_name = "contract_name", $code = "", $abi = [], "0", "0", $broadcast);
-
-// updateContract
-$client->updateContract($contract_name = "contract_name", null, $code = "", $abi, true);
-
-// callContract
-$client->callContract($contract_name = "contract_name", $method = "transfer", $param = ['memo' => ""], $amount_asset = "1 GXC", $broadcast);
-
-// same as gxclient-node
-$client->getChainID();
-$client->getObject(1);
-$client->getObjects([1, 2, 3]);
-$client->getAccount($account_id_or_name);
+``` php
+//init GXClient
+new GXClient($private_key, $account_id_or_name, $entry_point);
 ```
 
-### Get Info
+## Keypair API
 
-All read only Chain API methods same as js, but not async, all rpc are sync
+``` php
+//generate key pair locally
+function generateKey(String $brainKey);
+//export public key from private key
+function privateToPublic(String $privateKey);
+//check if public key is valid
+function isValidPublic(String $publicKey);
+//check if private key is valid
+function isValidPrivate(String $privateKey);
+```
 
-[gxclient-node/api](https://gxchain.github.io/gxclient-node/api/) 
+## Chain API
 
-## Contributing
+``` php
+//get current blockchain id
+function getChainID();
+//get dynamic global properties 
+function getDynamicGlobalProperties();
+//get block object
+function getObject(String $object_id);
+//get block objects
+function getObjects(Array $object_ids);
+// get block by block height
+function getBlock(Integer $blockHeight);
+//send transfer request to entryPoint node
+function transfer(String $to, String $memo, String $amount_asset, Boolean $broadcast);
+//vote for accounts
+function vote(Array $accounts, String $fee_paying_asset, Boolean $broadcast);
+//broadcast transaction
+function broadcast(Object $tx)
+```
 
-All contributions are welcome! GXC TO DA MOON!!!
+## Faucet API
 
-## License
+``` php
+//register gxchain account
+function register(String $account, String $activeKey, String $ownerKey, String $memoKey, String $faucet);
+```
+## Account API
 
-Free for everyone!
+``` php
+// get account info by account name
+function getAccount(String $account_name);
+//get account_ids by public key
+function getAccountByPublicKey(String $publicKey);
+//get account balances by account name
+function getAccountBalances(String $account_name);
+```
 
-MIT License
+## Asset API
+
+``` php
+//get asset info by symbol
+function getAsset(String $symbol);
+```
+
+## Contract API
+
+``` php
+// call smart contract method
+function callContract(String $contract_name, String $method_name, Object $params, String $amount_asset, Boolean $broadcast);
+// create smart contract method
+function createContract(String $contract_name, String $code, Object $abi, String $vm_type, String $vm_version, Boolean $broadcast);
+// update smart contract method
+function updateContract(String $contract_name, String $newOwner, String $code, Object $abi, Boolean $broadcast);
+//get contract table by contract_name
+function getContractTable(String $contract_name) 
+//get contract abi by contract_name
+function getContractABI(String $contract_name) 
+public List<Table> getContractTable(String contractName);
+//get contract table objects
+function getTableObjects(String $contract_name, String $table_name, Integer $start, Integer $limit) 
+```
+
+# Usage
+
+Please refer to the example under exmaples.
+
+# Other
+
+- It's very welcome for developers to translate this project into different programing languages
+- We are looking forward to your pull requests
