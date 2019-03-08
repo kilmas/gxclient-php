@@ -113,7 +113,7 @@ function getTableObjects(String $contract_name, String $table_name, Integer $sta
 
 # Usage
 
-、、、php
+```php
 require "vendor/autoload.php";
 
 use GXChain\GXClient\GXClient;
@@ -123,7 +123,7 @@ $client = new GXClient();
 $keyPair = $client->generateKey();
 
 echo(json_encode($keyPair));
-、、、
+```
 
 For more examples, please refer to the examples directory.
 
