@@ -113,7 +113,19 @@ function getTableObjects(String $contract_name, String $table_name, Integer $sta
 
 # Usage
 
-Please refer to the example under exmaples.
+、、、php
+require "vendor/autoload.php";
+
+use GXChain\GXClient\GXClient;
+
+$client = new GXClient();
+
+$keyPair = $client->generateKey();
+
+echo(json_encode($keyPair));
+、、、
+
+For more examples, please refer to the examples directory.
 
 # Other
 
