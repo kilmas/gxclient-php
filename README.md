@@ -62,7 +62,7 @@ function getObjects(Array $object_ids);
 // get block by block height
 function getBlock(Integer $blockHeight);
 //send transfer request to entryPoint node
-function transfer(String $to, String $memo, String $amount_asset, Boolean $broadcast);
+function transfer(String $to, String $memo, String $amount_asset, Boolean $broadcast, String $fee_paying_asset);
 //vote for accounts
 function vote(Array $accounts, String $fee_paying_asset, Boolean $broadcast);
 //broadcast transaction
@@ -97,11 +97,11 @@ function getAsset(String $symbol);
 
 ``` php
 // call smart contract method
-function callContract(String $contract_name, String $method_name, Object $params, String $amount_asset, Boolean $broadcast);
+function callContract(String $contract_name, String $method_name, Object $params, String $amount_asset, Boolean $broadcast, String $fee_paying_asset);
 // create smart contract method
-function createContract(String $contract_name, String $code, Object $abi, String $vm_type, String $vm_version, Boolean $broadcast);
+function createContract(String $contract_name, String $code, Object $abi, String $vm_type, String $vm_version, Boolean $broadcast, String $fee_paying_asset);
 // update smart contract method
-function updateContract(String $contract_name, String $newOwner, String $code, Object $abi, Boolean $broadcast);
+function updateContract(String $contract_name, String $newOwner, String $code, Object $abi, Boolean $broadcast, String $fee_paying_asset);
 //get contract table by contract_name
 function getContractTable(String $contract_name) 
 //get contract abi by contract_name

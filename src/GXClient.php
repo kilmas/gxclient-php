@@ -281,7 +281,7 @@ class GXClient
      * @param $broadcast
      * @return mixed
      */
-    function transfer($to, $memo, $amount_asset, $broadcast = false)
+    function transfer($to, $memo, $amount_asset, $broadcast = false, $fee_paying_asset = "GXC")
     {
         $memo_private = $this->private_key;
         $isMemoProvider = false;
@@ -289,7 +289,6 @@ class GXClient
         if (!Ecc::isValidPrivate($memo_private)) {
             throw new \Exception("Not a Valid PrivateKey");
         }
-
         // if memo is function, it can receive fromAccount and toAccount, and should return a full memo object
         if (gettype($memo) === "function") {
             $isMemoProvider = true;
@@ -308,12 +307,16 @@ class GXClient
 
             $toAcc = $this->getAccount($to);
             $assetInfo = $this->getAsset($asset);
+            $fee_asset = $this->getAsset($fee_paying_asset);
 
             if (!$toAcc) {
                 throw new \Exception("Account {$to} not exist");
             }
             if (!$assetInfo) {
                 throw new \Exception("Asset {$asset} not exist");
+            }
+            if (!$fee_asset) {
+                throw new \Exception("Asset {$fee_paying_asset} not exist");
             }
             $amount = [
                 "amount" => $this->_accMult($amount, pow(10, $assetInfo['precision'])),
@@ -369,7 +372,7 @@ class GXClient
             $tr->add_operation($tr->get_type_operation("transfer", [
                 'fee' => [
                     'amount' => 0,
-                    'asset_id' => $amount['asset_id']
+                    'asset_id' => $fee_asset['id']
                 ],
                 'from' => $fromAcc['id'],
                 'to' => $toAcc['id'],
@@ -433,11 +436,21 @@ class GXClient
      * @param $broadcast
      * @return mixed
      */
-    function createContract($contract_name, $code, $abi, $vm_type = "0", $vm_version = "0", $broadcast = false)
+    function createContract($contract_name, $code, $abi, $vm_type = "0", $vm_version = "0", $broadcast = false, $fee_paying_asset = "GXC")
     {
         $this->_connect();
+
+        $fee_asset = $this->getAsset($fee_paying_asset);
+        if (!$fee_asset) {
+            throw new \Exception("Asset {$fee_paying_asset} not exist");
+        }
+
         $tr = $this->_createTransaction();
         $tr->add_operation($tr->get_type_operation("create_contract", [
+            'fee' => [
+                'amount' => 0,
+                'asset_id' => $fee_asset['id']
+            ],
             'name' => $contract_name,
             'account' => $this->account_id,
             'vm_type' => $vm_type,
@@ -457,15 +470,25 @@ class GXClient
      * @param $broadcast
      * @return mixed
      */
-    function updateContract($contract_name, $newOwner = null, $code, $abi, $broadcast = false)
+    function updateContract($contract_name, $newOwner = null, $code, $abi, $broadcast = false, $fee_paying_asset = "GXC")
     {
         $this->_connect();
+
+        $fee_asset = $this->getAsset($fee_paying_asset);
+        if (!$fee_asset) {
+            throw new \Exception("Asset {$fee_paying_asset} not exist");
+        }
+
         $results[0] = $this->getAccount($contract_name);
         if ($newOwner) {
             $results[1] = $this->getAccount($newOwner);
         }
         $tr = $this->_createTransaction();
         $opt = [
+            'fee' => [
+                'amount' => 0,
+                'asset_id' => $fee_asset['id']
+            ],
             'owner' => $this->account_id,
             'contract' => $results[0]['id'],
             'code' => $code,
@@ -487,7 +510,7 @@ class GXClient
      * @param $broadcast {Boolean} - Broadcast the transaction or just return a serialized transaction
      * @return mixed
      */
-    function callContract($contract_name, $method_name, $params, $amount_asset, $broadcast = false)
+    function callContract($contract_name, $method_name, $params, $amount_asset, $broadcast = false, $fee_paying_asset = "GXC")
     {
         $this->_connect();
         if ($amount_asset) {
@@ -500,10 +523,15 @@ class GXClient
 
         $acc = $this->getAccount($contract_name);
         $assetInfo = $this->getAsset($asset);
+        $fee_asset = $this->getAsset($fee_paying_asset);
 
         if (!$assetInfo) {
             throw new \Exception("Asset {$asset} not exist");
         }
+        if (!$fee_asset) {
+            throw new \Exception("Asset {$fee_paying_asset} not exist");
+        }
+
         $amount = [
             'amount' => $this->_accMult($amount, pow(10, $assetInfo['precision'])),
             'asset_id' => $assetInfo['id']
@@ -519,7 +547,7 @@ class GXClient
             $opts = [
                 "fee" => [
                     "amount" => 0,
-                    "asset_id" => $amount['asset_id']
+                    "asset_id" => $fee_asset['id']
                 ],
                 "account" => $this->account_id,
                 "contract_id" => $acc['id'],
@@ -562,7 +590,7 @@ class GXClient
                 throw new \Exception("account_id {$this->account_id} not exist");
             }
             if (!$fee_asset) {
-                throw new \Exception("asset {$fee_paying_asset} not exist");
+                throw new \Exception("Asset {$fee_paying_asset} not exist");
             }
             $new_options = [
                 'memo_key' => $acc['options']['memo_key'],
