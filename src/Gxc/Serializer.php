@@ -39,12 +39,12 @@ class Serializer
                 try {
                     $object[$field] = $type->fromByteBuffer($b);
                 } catch (\Exception $e) {
-                    throwException($e->getMessage());
+                    throw new \Exception($e->getMessage());
                 }
             }
 
         } catch (\Exception $error) {
-            throwException($this->operation_name . '.' . $field . $error->getMessage());
+            throw new \Exception($this->operation_name . '.' . $field . $error->getMessage());
         }
 
         return $object;
@@ -67,7 +67,7 @@ class Serializer
             }
 
         } catch (\Exception $error) {
-            throwException($this->operation_name . '.' . $field . $error->getMessage());
+            throw new \Exception($this->operation_name . '.' . $field . $error->getMessage());
         }
         return;
     }
@@ -88,7 +88,7 @@ class Serializer
             }
 
         } catch (\Exception $error) {
-            throwException($this->operation_name . '.' . $field . $error->getMessage());
+            throw new \Exception($this->operation_name . '.' . $field . $error->getMessage());
         }
 
         return $result;
@@ -122,7 +122,7 @@ class Serializer
                 $result[$field] = $object;
             }
         } catch (\Exception $error) {
-            throwException($this->operation_name . '.' . $field . $error->getMessage());
+            throw new \Exception($this->operation_name . '.' . $field . $error->getMessage());
         }
 
         return $result;

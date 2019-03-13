@@ -26,7 +26,7 @@ class ObjectId
         $instance_string = $this->instance->toString();
         $ObjectId = `{$this->space}.{$this->type}.{$instance_string}`;
         if (!v::is_digits($instance_string)) {
-            throwException(`Invalid object id ${ObjectId}`);
+            throw new \Exception(`Invalid object id ${ObjectId}`);
         }
     }
 

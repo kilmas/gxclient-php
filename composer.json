@@ -1,6 +1,6 @@
 {
     "name": "gxchain/gxclient",
-    "description": "PHP SDK for the GXC RPC API",
+    "description": "A client to interact with gxchain implemented in PHP",
     "type": "library",
     "keywords": ["php","gxclient","gxc","rpc","sdk","api","crypto","blockchain"],
     "homepage": "https://github.com/gxchain/gxclient-php",

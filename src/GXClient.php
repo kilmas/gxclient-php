@@ -42,7 +42,7 @@ class GXClient
     protected $host;
 
 
-    public function __construct($private_key, $account_id_or_name, $entry_point = "wss://node1.gxb.io", $signProvider = null)
+    public function __construct($private_key = "", $account_id_or_name = "", $entry_point = "wss://node1.gxb.io", $signProvider = null)
     {
         $this->private_key = $private_key;
         $this->account_id_or_name = $account_id_or_name;
@@ -64,7 +64,7 @@ class GXClient
      * @param $brainKey
      * @return array [brainKey: *, privateKey: *, publicKey: *]
      */
-    function generateKey($brainKey = '')
+    function generateKey($brainKey = "")
     {   
         $ec = new EC('secp256k1');
         
@@ -124,17 +124,14 @@ class GXClient
     function register($account, $activeKey, $ownerKey, $memoKey, $faucet = "https://opengateway.gxb.io")
     {
         if (!$activeKey) {
-            throwException("active key is required");
+            throw new \Exception("active key is required");
         } else {
-            $resp = $this->client->post(`${faucet}/account/register`, [
-                'account' => [
-                    'name' => $account,
-                    'active_key' => $activeKey,
-                    'owner_key' => $ownerKey || $activeKey,
-                    'memo_key' => $memoKey || $activeKey
-                ]
-            ]);
-            return $resp;
+            return $this->client->register($faucet, ['account' => [
+                'name' => $account,
+                'active_key' => $activeKey,
+                'owner_key' => $ownerKey ? $ownerKey : $activeKey,
+                'memo_key' => $memoKey ? $memoKey : $activeKey
+            ]]);
         }
     }
 
@@ -276,13 +273,17 @@ class GXClient
     {
         $memo_private = $this->private_key;
         $isMemoProvider = false;
+        // Check PrivateKey isValid
+        if (!Ecc::isValidPrivate($memo_private)) {
+            throw new \Exception("Not a Valid PrivateKey");
+        }
 
         // if memo is function, it can receive fromAccount and toAccount, and should return a full memo object
         if (gettype($memo) === "function") {
             $isMemoProvider = true;
         }
         if (!strpos($amount_asset, " ")) {
-            throwException("Incorrect format of asset, eg. \"100 GXC\"");
+            throw new \Exception("Incorrect format of asset, eg. \"100 GXC\"");
         } else {
             $assetArr = explode(" ", $amount_asset);
             $amount = intval($assetArr[0]);
@@ -297,10 +298,10 @@ class GXClient
             $assetInfo = $this->getAsset($asset);
 
             if (!$toAcc) {
-                throwException("Account {$to} not exist");
+                throw new \Exception("Account {$to} not exist");
             }
             if (!$assetInfo) {
-                throwException("Asset {$asset} not exist");
+                throw new \Exception("Asset {$asset} not exist");
             }
             $amount = [
                 "amount" => $this->_accMult($amount, pow(10, $assetInfo['precision'])),
@@ -324,12 +325,13 @@ class GXClient
                     // $fromPrivate = Ecc::privateToPublic($memo_private);
 
                     if ($memo_from_public != Ecc::privateToPublic($memo_private, 'GXC')) {
-                        throwException("memo signer not exist");
+                        throw new \Exception("memo signer not exist");
                     }
                 }
 
                 if ($memo && $memo_to_public && $memo_from_public) {
                     $nonce = TransactionHelper::unique_nonce_uint64();
+
                     $memo_object = [
                         'from' => $memo_from_public,
                         'to' => $memo_to_public,
@@ -346,8 +348,7 @@ class GXClient
                 try {
                     $memo_object = memo($fromAcc, $toAcc);
                 } catch (\Exception $e) {
-
-                    return;
+                    throw new \Exception($e);
                 }
             }
 
@@ -406,7 +407,7 @@ class GXClient
                 [$contract_id, $contract_id, string_to_name($table_name), $start, -1, $limit]
             );
         } else {
-            throwException("Contract not found");
+            throw new \Exception("Contract not found");
         }
     }
 
@@ -479,7 +480,7 @@ class GXClient
         $this->_connect();
         if ($amount_asset) {
             if (!strpos($amount_asset, " ")) {
-                throwException("Incorrect format of asset, eg. \"100 GXC\"");
+                throw new \Exception("Incorrect format of asset, eg. \"100 GXC\"");
             }
         }
         $amount = $amount_asset ? floatval(explode(" ", $amount_asset)[0]) : 0;
@@ -489,7 +490,7 @@ class GXClient
         $assetInfo = $this->getAsset($asset);
 
         if (!$assetInfo) {
-            throwException("Asset {$asset} not exist");
+            throw new \Exception("Asset {$asset} not exist");
         }
         $amount = [
             'amount' => $this->_accMult($amount, pow(10, $assetInfo['precision'])),
@@ -520,7 +521,7 @@ class GXClient
             $tr->add_operation($tr->get_type_operation("call_contract", $opts));
             return $this->_processTransaction($tr, $broadcast);
         } else {
-            throwException("Contract not found");
+            throw new \Exception("Contract not found");
         }
     }
 
@@ -536,9 +537,9 @@ class GXClient
         if ($this->_connect()) {
             $_accounts = [];
             foreach ($accounts as $a) {
-                $_account = $this->getAccount($a);
+                $_account = $this->getObject($a);
                 $_accounts[] = $_account;
-                $account_ids [] = $_account['id'];
+                $account_ids[] = $_account['id'];
             }
             $accs = $this->_query("get_objects", [[$this->account_id, "2.0.0"]]);
             $acc = $accs[0];
@@ -546,30 +547,33 @@ class GXClient
             $fee_asset = $this->getAsset($fee_paying_asset);
 
             if (!$acc) {
-                throwException("account_id {$this->account_id} not exist");
+                throw new \Exception("account_id {$this->account_id} not exist");
             }
             if (!$fee_asset) {
-                throwException("asset {$fee_paying_asset} not exist");
+                throw new \Exception("asset {$fee_paying_asset} not exist");
             }
             $new_options = [
                 'memo_key' => $acc['options']['memo_key'],
                 'voting_account' => empty($acc['options']['voting_account']) ? "1.2.5" : $acc['options']['voting_account']
             ];
-            $results = [];
             $votes = [];
+            $res1 = [];
+            $res2 = [];
             foreach ($account_ids as $account_id) {
-                $results = $this->_query("get_witness_by_account", [$account_id]);
-                $v = $this->_query("get_committee_member_by_account", [$account_id]);
-                $votes[] = $v['vote_id'];
+                $res1[] = $this->_query("get_witness_by_account", [$account_id]);
+                $res2[] = $this->_query("get_committee_member_by_account", [$account_id]);
             }
+            $votes = array_merge($res1, $res2);
+            $votes = array_filter($votes);
+            $votes = array_map(function ($v) {
+                return $v['vote_id'];
+            }, $votes);
             $new_options['votes'] = array_unique(array_merge($votes, $acc['options']['votes']));
-
-
             $num_witness = 0;
             $num_committee = 0;
             foreach ($new_options['votes'] as $v) {
                 $vote_type = explode(":", $v)[0];
-                if ($vote_type == "0") {
+                if ($vote_type == 0) {
                     $num_committee += 1;
                 }
                 if ($vote_type == 1) {
@@ -672,7 +676,7 @@ class GXClient
     {
         $tr = null;
         if (!$this->connected) {
-            throwException("_createTransaction have to be invoked after _connect()");
+            throw new \Exception("_createTransaction have to be invoked after _connect()");
         }
         if ($this->signProvider) {
             $tr = new TransactionBuilder($this->signProvider, $this->rpc, $this->chain_id);
@@ -694,7 +698,7 @@ class GXClient
         $tr->update_head_block();
         $tr->set_required_fees();
         if (!$this->signProvider) {
-            $this->private_key && $tr->add_signer(Ecc::wifPrivateToPrivateHex($this->private_key));
+            $this->private_key && $tr->add_signer($this->private_key);
         }
         $tr->set_expire_seconds(self::DEFUALT_EXPIRE_SEC);
         if ($broadcast) {
