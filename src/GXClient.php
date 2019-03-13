@@ -9,6 +9,7 @@
 namespace GXChain\GXClient;
 
 use Elliptic\EC;
+use GXChain\GXClient\Ecc\Signature;
 use GXChain\GXClient\Ecc\Ecc;
 use GXChain\GXClient\Adapter\Http\HttpInterface;
 use GXChain\GXClient\Ecc\Aes;
@@ -108,6 +109,17 @@ class GXClient
     function isValidPrivate($privateKey)
     {
         return Ecc::isValidPrivate($privateKey);
+    }
+
+    /**
+     * generate sign data by buff and private key
+     * @param buff
+     * @param privateKey
+     * @return string
+     */
+    function signBuffer($buff, $privateKey)
+    {
+        return Signature::signBuffer($buff, $privateKey);
     }
 
     /**
