@@ -4,8 +4,8 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use GXChain\GXClient\GXClient;
 
-$private_key = "5J34qNsM2nrDarhKM5bvsJMqYuQtimv9Cn5ophHq6hZWxwgLv8e";
-$account_id_or_name = "xlogic-test112";
+$private_key = "5J34qxxxx...";
+$account_id_or_name = "xlogic";
 $entry_point = "wss://testnet.gxchain.org";
 
 $client = new GXClient($private_key, $account_id_or_name, $entry_point);
