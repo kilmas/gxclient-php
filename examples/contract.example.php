@@ -17,7 +17,7 @@ try {
     // Set broadcast to false so we could calculate the fee before broadcasting
     $broadcast = true;
     // Sending 1GXC to Contract(Bank) by Method of "deposit"
-    $result = $client->callContract("bank", "deposit", "1 GXC", null, $broadcast);
+    $result = $client->callContract("bank", "deposit", null, "1 GXC", $broadcast);
     echo('callContract:');
     echo "\n";
     echo(json_encode($result));
