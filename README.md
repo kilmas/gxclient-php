@@ -10,7 +10,7 @@ A client to interact with gxchain implemented in PHP
 </p> 
 
 # Supported Versions
-PHP7.0
+PHP7.0 x64
 
 # Install
 
