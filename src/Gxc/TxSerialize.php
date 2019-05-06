@@ -13,7 +13,7 @@ class TxSerialize
         return strpos($type, "[]") !== false;
     }
 
-    function serializeCallData($action, $params, $abi)
+    static function serializeCallData($action, $params, $abi)
     {
         $abi = json_decode(json_encode($abi), true);
         $structs = $abi['structs'];
@@ -78,7 +78,7 @@ class TxSerialize
         return $b->hex;
     }
 
-    function serializeTransaction($transaction)
+    static function serializeTransaction($transaction)
     {
         $ops = ops::serializer('transaction');
         return $ops->toBuffer($ops->fromObject($transaction));
