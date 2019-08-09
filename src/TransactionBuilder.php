@@ -489,7 +489,7 @@ class TransactionBuilder
     {
         if (!$time_string)
             return strtotime("1970-01-01T00:00:00.000Z");
-        if ($time[strlen($time) -1] != "Z")
+        if ($time_string[strlen($time_string) -1] != "Z")
             $time_string = $time_string . "Z";
         return strtotime($time_string);
     }

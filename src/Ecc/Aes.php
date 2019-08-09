@@ -94,7 +94,8 @@ class Aes
 
         try {
             $hash = hash('sha512', hex2bin($S->toString('hex')));
-            $aes = self::fromSeed($nonce . $hash);
+
+            $aes = Aes::fromSeed($nonce . $hash);
 
             $planebuffer = $aes->decrypt($message);
         } catch (\Exception $ex) { // fallback with a shared secret with no padding
@@ -110,9 +111,7 @@ class Aes
         $checksum = substr($planebuffer, 0, 4);
         $plaintext = substr($planebuffer, 4);
 
-        $new_checksum = hash('sha256', $plaintext);
-        $new_checksum = substr($new_checksum, 0, 4);
-
+        $new_checksum = hex2bin(substr(hash('sha256', $plaintext), 0, 8));
 
         if (!($checksum === $new_checksum)) {
             throw new \Exception("Invalid key, could not decrypt message(2)");
@@ -211,7 +210,7 @@ class Aes
             throw new \Exception("Missing cipher text");
         }
         // Convert data into word arrays (used by Crypto)
-        return $plainwords = $this->_decrypt_word_array($cipher);
+        return $plainwords = $this->decryptHexToText($cipher);
     }
 
     /** This method does not use a checksum, the returned data must be validated some other way.
@@ -223,9 +222,8 @@ class Aes
         if (!$cipher) {
             throw new \Exception("Missing cipher text");
         }
-        
-        // Convert data into word arrays (used by Crypto)
-        return bin2hex(openssl_decrypt($cipher, 'AES256', $this->key, OPENSSL_RAW_DATA, $this->iv));
+
+        return openssl_decrypt(hex2bin($cipher), 'AES256', $this->key, OPENSSL_RAW_DATA, $this->iv);
     }
 
     /** This method does not use a checksum, the returned data must be validated some other way.
