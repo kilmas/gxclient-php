@@ -862,7 +862,7 @@ class Types
             },
             'appendByteBuffer' => function ($b, $object) {
                 $obj = self::string_to_name($object);
-                $b->writeUint64(floatval(v::unsigned($obj)));
+                $b->writeUint64(v::to_long(v::unsigned($obj)));
                 return;
             },
             'fromObject' => function ($object) {
