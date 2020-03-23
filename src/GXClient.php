@@ -662,6 +662,148 @@ class GXClient
     }
 
     /**
+     * get staking programs
+     */
+    public function getStakingPrograms()
+    {
+        $result = $this->_query("get_objects", [['2.0.0']]);
+        if (isset($result[0])) {
+            foreach ($result[0]['parameters']['extensions'] as $key => $value) {
+                if ($value[0] == 11) {
+                    return $value[1]['params'];
+                }
+            }
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * @param {String} to - trust node account name
+     * @param {Number} amount - the amount of GXC to staking
+     * @param {String} program_id - the staking program id
+     * @param {Object} options
+     * @param {Array} options[fee_symbol]  - e.g: 'GXC'
+     * @returns {Promise<any>}
+     */
+    public function createStaking($to, $amount, $program_id, $broadcast, $options = ['fee_symbol' => 'GXC'])
+    {
+        $this->_connect();
+        $trustNodeAccount = $this->getAccount($to);
+        if (!$trustNodeAccount) {
+            throw new \Exception("Account {$to} not exist");
+        }
+        $tustNodeInfo = $this->_query("get_witness_by_account", [$trustNodeAccount['id']]);
+        if (!$tustNodeInfo) {
+            throw new \Exception("Account {$to} is not a trustnode");
+        }
+        $program_staking_arr = $this->getStakingPrograms();
+        $program             = [];
+        foreach ($program_staking_arr as $key => $value) {
+            if ($value[0] == $program_id) {
+                $program = $value;
+            }
+        }
+        if (!$program) {
+            throw new \Exception("Program {$program_id} not exist");
+        }
+        if (!$program[1]['is_valid']) {
+            throw new \Exception("Program {$program_id} disabled");
+        }
+
+        $feeInfo = $this->getAsset($options['fee_symbol']);
+
+        if (!$feeInfo) {
+            throw new \Exception("Asset {$options['fee_symbol']} not exist");
+        }
+
+        $amount = intval($amount);
+
+        $tr = $this->_createTransaction();
+
+        $tr->add_operation($tr->get_type_operation("staking_create", [
+            'fee'          => [
+                'amount'   => 0,
+                'asset_id' => $feeInfo['id'],
+            ],
+            'owner'        => $this->account_id,
+            'trust_node'   => $tustNodeInfo['id'],
+            'program_id'   => "{$program_id}",
+            'amount'       => [
+                'amount'   => $this->_accMult($amount, pow(10, 5)),
+                'asset_id' => '1.3.1',
+            ],
+            'weight'       => $program[1]['weight'],
+            'staking_days' => $program[1]['staking_days'],
+        ]));
+        return $this->_processTransaction($tr, $broadcast);
+    }
+    /**
+     * @param {String} to - trust node account name
+     * @param {String} staking_id - the staking id
+     * @param {Object} options
+     * @param {Array} options[fee_symbol]  - e.g: 'GXC'
+     * @returns {Promise<any>}
+     */
+    public function updateStaking($to, $staking_id, $broadcast = false, $options = ['fee_symbol' => 'GXC'])
+    {
+        $this->_connect();
+        $trustNodeAccount = $this->getAccount($to);
+        if (!$trustNodeAccount) {
+            throw new \Exception("Account {$to} not exist");
+        }
+        $tustNodeInfo = $this->_query("get_witness_by_account", [$trustNodeAccount['id']]);
+        if (!$tustNodeInfo) {
+            throw new \Exception("Account {$to} is not a trustnode");
+        }
+        $feeInfo = $this->getAsset($options['fee_symbol']);
+
+        if (!$feeInfo) {
+            throw new \Exception("Asset {$options['fee_symbol']} not exist");
+        }
+
+        $tr = $this->_createTransaction();
+
+        $tr->add_operation($tr->get_type_operation("staking_update", [
+            'fee'        => [
+                'amount'   => 0,
+                'asset_id' => $feeInfo['id'],
+            ],
+            'owner'      => $this->account_id,
+            'trust_node' => $tustNodeInfo['id'],
+            'staking_id' => $staking_id,
+        ]));
+        return $this->_processTransaction($tr, $broadcast);
+    }
+
+    /**
+     * @param {String} to - trust node account name
+     * @param {String} staking_id - the staking id
+     * @param {Object} options
+     * @param {Array} options[fee_symbol]  - e.g: 'GXC'
+     * @returns {Promise<any>}
+     */
+    public function claimStaking($staking_id, $broadcast, $options = ['fee_symbol' => 'GXC'])
+    {
+        $this->_connect();
+        $feeInfo = $this->getAsset($options['fee_symbol']);
+
+        if (!$feeInfo) {
+            throw new \Exception("Asset {$options['fee_symbol']} not exist");
+        }
+        $tr = $this->_createTransaction();
+
+        $tr->add_operation($tr->get_type_operation("staking_claim", [
+            'fee'        => [
+                'amount'   => 0,
+                'asset_id' => $feeInfo['id'],
+            ],
+            'owner'      => $this->account_id,
+            'staking_id' => $staking_id,
+        ]));
+        return $this->_processTransaction($tr, $broadcast);
+    }
+    /**
      * accurate multiply - fix the accurate issue of javascript
      * @param arg1
      * @param arg2
