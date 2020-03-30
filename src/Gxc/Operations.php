@@ -131,7 +131,10 @@ $operation = Types::static_variant([
     'proxy_transfer',
     'create_contract',
     'call_contract',
-    'update_contract'
+    'update_contract',
+    '80' => 'staking_create',
+    '81' => 'staking_update',
+    '82' => 'staking_claim',
 ]);
 
 $future_extensions = Types::void();
@@ -475,6 +478,30 @@ $account_update = Operations::_serializer("account_update", ['fee' => $asset,
     'new_options' => Types::optional($account_options),
     'extensions' => Types::set($future_extensions)
 ]);
+
+$staking_create = Operations::_serializer("staking_create", ['fee' => $asset,
+    'owner'                                                            => Types::protocol_id_type("account"),
+    'trust_node'                                                       => Types::protocol_id_type("witness"),
+    'amount'                                                           => $asset,
+    'program_id'                                                       => Types::string(),
+    'weight'                                                           => Types::uint(32),
+    'staking_days'                                                     => Types::uint(32),
+    'extensions'                                                       => Types::set($future_extensions),
+]);
+
+$staking_update = Operations::_serializer("staking_update", ['fee' => $asset,
+    'owner'                                                            => Types::protocol_id_type("account"),
+    'trust_node'                                                       => Types::protocol_id_type("witness"),
+    'staking_id'                                                       => Types::protocol_id_type("staking"),
+    'extensions'                                                       => Types::set($future_extensions),
+]);
+
+$staking_claim = Operations::_serializer("staking_claim", ['fee' => $asset,
+    'owner'                                                          => Types::protocol_id_type("account"),
+    'staking_id'                                                     => Types::protocol_id_type("staking"),
+    'extensions'                                                     => Types::set($future_extensions),
+]);
+
 
 $account_whitelist = Operations::_serializer("account_whitelist", ['fee' => $asset,
     'authorizing_account' => Types::protocol_id_type("account"),
