@@ -26,6 +26,7 @@ composer require gxchain/gxclient
 - [x] [Account API](#account-api)
 - [x] [Asset API](#asset-api)
 - [x] [Contract API](#contract-api)
+- [x] [Staking API](#staking-api)
 
 
 ## Constructors
@@ -109,6 +110,19 @@ function getContractABI(String $contract_name)
 public List<Table> getContractTable(String contractName);
 //get contract table objects
 function getTableObjects(String $contract_name, String $table_name, Integer $start, Integer $limit) 
+```
+
+## Staking API
+
+``` php
+// get staking programs method
+function getStakingPrograms();
+// create staking method
+function createStaking(String $to, Number $amount, String program_id, Boolean $broadcast, Array $options);
+// update staking method
+function updateStaking(String $to, String $staking_id, Boolean $broadcast, Array $options);
+// claim staking method
+function claimStaking(String $staking_id, Boolean $broadcast, Array $options) 
 ```
 
 # Usage

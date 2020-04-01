@@ -682,7 +682,7 @@ class GXClient
      * @param {String} to - trust node account name
      * @param {Number} amount - the amount of GXC to staking
      * @param {String} program_id - the staking program id
-     * @param {Object} options
+     * @param {Boolean} $broadcast
      * @param {Array} options[fee_symbol]  - e.g: 'GXC'
      * @returns {Promise<any>}
      */
@@ -741,7 +741,7 @@ class GXClient
     /**
      * @param {String} to - trust node account name
      * @param {String} staking_id - the staking id
-     * @param {Object} options
+     * @param {Boolean} $broadcast
      * @param {Array} options[fee_symbol]  - e.g: 'GXC'
      * @returns {Promise<any>}
      */
@@ -777,9 +777,8 @@ class GXClient
     }
 
     /**
-     * @param {String} to - trust node account name
      * @param {String} staking_id - the staking id
-     * @param {Object} options
+     * @param {Boolean} $broadcast
      * @param {Array} options[fee_symbol]  - e.g: 'GXC'
      * @returns {Promise<any>}
      */
