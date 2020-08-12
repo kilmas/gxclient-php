@@ -7,9 +7,7 @@
  */
 
 
-namespace Kilmas\GxcRpc\Gxc;
-
-use Kilmas\GxcRpc\Gxc\Operations as ops;
+namespace GXChain\GXClient\Gxc;
 
 class Serializer
 {
@@ -41,12 +39,12 @@ class Serializer
                 try {
                     $object[$field] = $type->fromByteBuffer($b);
                 } catch (\Exception $e) {
-                    throwException($e->getMessage());
+                    throw new \Exception($e->getMessage());
                 }
             }
 
         } catch (\Exception $error) {
-            throwException($this->operation_name . '.' . $field . $error->getMessage());
+            throw new \Exception($this->operation_name . '.' . $field . $error->getMessage());
         }
 
         return $object;
@@ -69,7 +67,7 @@ class Serializer
             }
 
         } catch (\Exception $error) {
-            throwException($this->operation_name . '.' . $field . $error->getMessage());
+            throw new \Exception($this->operation_name . '.' . $field . $error->getMessage());
         }
         return;
     }
@@ -90,7 +88,7 @@ class Serializer
             }
 
         } catch (\Exception $error) {
-            throwException($this->operation_name . '.' . $field . $error->getMessage());
+            throw new \Exception($this->operation_name . '.' . $field . $error->getMessage());
         }
 
         return $result;
@@ -124,7 +122,7 @@ class Serializer
                 $result[$field] = $object;
             }
         } catch (\Exception $error) {
-            throwException($this->operation_name . '.' . $field . $error->getMessage());
+            throw new \Exception($this->operation_name . '.' . $field . $error->getMessage());
         }
 
         return $result;
@@ -167,8 +165,9 @@ class Serializer
     function toHex($object)
     {
         // return this.toBuffer(object).toString("hex")
-        $b = $this->toByteBuffer($object);
-        return bin2hex($b->pack);
+        $b = new ByteBuffer(ByteBuffer::DEFAULT_CAPACITY, ByteBuffer::LITTLE_ENDIAN);
+        $this->appendByteBuffer($b, $object);
+        return $b->hex;
     }
 
     function toByteBuffer($object)
@@ -180,7 +179,9 @@ class Serializer
 
     function toBuffer($object)
     {
-        return $this->toByteBuffer($object);
+        $b = new ByteBuffer(ByteBuffer::DEFAULT_CAPACITY, ByteBuffer::LITTLE_ENDIAN);
+        $this->appendByteBuffer($b, $object);
+        return $b->pack;
     }
 
 }

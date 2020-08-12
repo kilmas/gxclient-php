@@ -6,7 +6,7 @@
  * Time=> 13=>31
  */
 
-namespace Kilmas\GxcRpc\Gxc;
+namespace GXChain\GXClient\Gxc;
 
 class Operations
 {
@@ -47,89 +47,6 @@ class Operations
         return self::$_operation;
     }
 }
-
-/*$st_operations = [
-    'transfer',
-    'limit_order_create',
-    'limit_order_cancel',
-    'call_order_update',
-    'fill_order',
-    'account_create',
-    'account_update',
-    'account_whitelist',
-    'account_upgrade',
-    'account_transfer',
-    'asset_create',
-    'asset_update',
-    'asset_update_bitasset',
-    'asset_update_feed_producers',
-    'asset_issue',
-    'asset_reserve',
-    'asset_fund_fee_pool',
-    'asset_settle',
-    'asset_global_settle',
-    'asset_publish_feed',
-    'witness_create',
-    'witness_update',
-    'proposal_create',
-    'proposal_update',
-    'proposal_delete',
-    'withdraw_permission_create',
-    'withdraw_permission_update',
-    'withdraw_permission_claim',
-    'withdraw_permission_delete',
-    'committee_member_create',
-    'committee_member_update',
-    'committee_member_update_global_parameters',
-    'vesting_balance_create',
-    'vesting_balance_withdraw',
-    'worker_create',
-    'custom',
-    'assert',
-    'balance_claim',
-    'override_transfer',
-    'transfer_to_blind',
-    'blind_transfer',
-    'transfer_from_blind',
-    'asset_settle_cancel',
-    'asset_claim_fees',
-    'fba_distribute_operation',
-    'account_upgrade_merchant',
-    'account_upgrade_datasource',
-    'stale_data_market_category_create',
-    'stale_data_market_category_update',
-    'stale_free_data_product_create',
-    'stale_free_data_product_update',
-    'stale_league_data_product_create',
-    'stale_league_data_product_update',
-    'stale_league_create',
-    'stale_league_update',
-    'data_transaction_create',
-    'data_transaction_update',
-    'data_transaction_pay',
-    'account_upgrade_data_transaction_member',
-    'data_transaction_datasource_upload',
-    'data_transaction_datasource_validate_error',
-    'data_market_category_create',
-    'data_market_category_update',
-    'free_data_product_create',
-    'free_data_product_update',
-    'league_data_product_create',
-    'league_data_product_update',
-    'league_create',
-    'league_update',
-    'datasource_copyright_clear',
-    'data_transaction_complain',
-    'balance_lock',
-    'balance_unlock',
-    'proxy_transfer',
-    'create_contract',
-    'call_contract',
-    'update_contract'
-];
-
-
-Operations::$st_operations = $st_operations;*/
 
 $predicate = Types::static_variant([
     'account_name_eq_lit_predicate',
@@ -214,7 +131,10 @@ $operation = Types::static_variant([
     'proxy_transfer',
     'create_contract',
     'call_contract',
-    'update_contract'
+    'update_contract',
+    '80' => 'staking_create',
+    '81' => 'staking_update',
+    '82' => 'staking_claim',
 ]);
 
 $future_extensions = Types::void();
@@ -547,7 +467,7 @@ $account_create = Operations::_serializer("account_create", ['fee' => $asset,
     'name' => Types::string(),
     'owner' => $authority,
     'active' => $authority,
-    'options' => "account_options",
+    'options' => $account_options,
     'extensions' => Types::set($future_extensions)
 ]);
 
@@ -555,9 +475,33 @@ $account_update = Operations::_serializer("account_update", ['fee' => $asset,
     'account' => Types::protocol_id_type("account"),
     'owner' => Types::optional($authority),
     'active' => Types::optional($authority),
-    'new_options' => Types::optional('account_options'),
+    'new_options' => Types::optional($account_options),
     'extensions' => Types::set($future_extensions)
 ]);
+
+$staking_create = Operations::_serializer("staking_create", ['fee' => $asset,
+    'owner'                                                            => Types::protocol_id_type("account"),
+    'trust_node'                                                       => Types::protocol_id_type("witness"),
+    'amount'                                                           => $asset,
+    'program_id'                                                       => Types::string(),
+    'weight'                                                           => Types::uint(32),
+    'staking_days'                                                     => Types::uint(32),
+    'extensions'                                                       => Types::set($future_extensions),
+]);
+
+$staking_update = Operations::_serializer("staking_update", ['fee' => $asset,
+    'owner'                                                            => Types::protocol_id_type("account"),
+    'trust_node'                                                       => Types::protocol_id_type("witness"),
+    'staking_id'                                                       => Types::protocol_id_type("staking"),
+    'extensions'                                                       => Types::set($future_extensions),
+]);
+
+$staking_claim = Operations::_serializer("staking_claim", ['fee' => $asset,
+    'owner'                                                          => Types::protocol_id_type("account"),
+    'staking_id'                                                     => Types::protocol_id_type("staking"),
+    'extensions'                                                     => Types::set($future_extensions),
+]);
+
 
 $account_whitelist = Operations::_serializer("account_whitelist", ['fee' => $asset,
     'authorizing_account' => Types::protocol_id_type("account"),
@@ -1187,88 +1131,6 @@ $proposal_create = Operations::_serializer("proposal_create", ['fee' => $asset,
     'review_period_seconds' => Types::optional(Types::uint(32)),
     'extensions' => Types::set($future_extensions)
 ]);
-
-
-//$operation->st_operations = [
-//    $transfer,
-//    $limit_order_create,
-//    $limit_order_cancel,
-//    $call_order_update,
-//    $fill_order,
-//    $account_create,
-//    $account_update,
-//    $account_whitelist,
-//    $account_upgrade,
-//    $account_transfer,
-//    $asset_create,
-//    $asset_update,
-//    $asset_update_bitasset,
-//    $asset_update_feed_producers,
-//    $asset_issue,
-//    $asset_reserve,
-//    $asset_fund_fee_pool,
-//    $asset_settle,
-//    $asset_global_settle,
-//    $asset_publish_feed,
-//    $witness_create,
-//    $witness_update,
-//    $proposal_create,
-//    $proposal_update,
-//    $proposal_delete,
-//    $withdraw_permission_create,
-//    $withdraw_permission_update,
-//    $withdraw_permission_claim,
-//    $withdraw_permission_delete,
-//    $committee_member_create,
-//    $committee_member_update,
-//    $committee_member_update_global_parameters,
-//    $vesting_balance_create,
-//    $vesting_balance_withdraw,
-//    $worker_create,
-//    $custom,
-//    $assert,
-//    $balance_claim,
-//    $override_transfer,
-//    $transfer_to_blind,
-//    $blind_transfer,
-//    $transfer_from_blind,
-//    $asset_settle_cancel,
-//    $asset_claim_fees,
-//    $fba_distribute_operation,
-//    $account_upgrade_merchant,
-//    $account_upgrade_datasource,
-//    $stale_data_market_category_create,
-//    $stale_data_market_category_update,
-//    $stale_free_data_product_create,
-//    $stale_free_data_product_update,
-//    $stale_league_data_product_create,
-//    $stale_league_data_product_update,
-//    $stale_league_create,
-//    $stale_league_update,
-//    $data_transaction_create,
-//    $data_transaction_update,
-//    $data_transaction_pay,
-//    $account_upgrade_data_transaction_member,
-//    $data_transaction_datasource_upload,
-//    $data_transaction_datasource_validate_error,
-//    $data_market_category_create,
-//    $data_market_category_update,
-//    $free_data_product_create,
-//    $free_data_product_update,
-//    $league_data_product_create,
-//    $league_data_product_update,
-//    $league_create,
-//    $league_update,
-//    $datasource_copyright_clear,
-//    $data_transaction_complain,
-//    $balance_lock,
-//    $balance_unlock,
-//    $proxy_transfer,
-//    $create_contract,
-//    $call_contract,
-//    $update_contract
-//];
-
 
 Operations::_type("operation", $operation);
 

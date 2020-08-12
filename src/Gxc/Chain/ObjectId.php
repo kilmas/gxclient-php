@@ -6,9 +6,9 @@
  * Time: 20:19
  */
 
-namespace Kilmas\GxcRpc\Gxc\Chain;
+namespace GXChain\GXClient\Gxc\Chain;
 
-use Kilmas\GxcRpc\Gxc\SerializerValidation as v;
+use GXChain\GXClient\Gxc\SerializerValidation as v;
 
 class ObjectId
 {
@@ -26,7 +26,7 @@ class ObjectId
         $instance_string = $this->instance->toString();
         $ObjectId = `{$this->space}.{$this->type}.{$instance_string}`;
         if (!v::is_digits($instance_string)) {
-            throwException(`Invalid object id ${ObjectId}`);
+            throw new \Exception(`Invalid object id ${ObjectId}`);
         }
     }
 

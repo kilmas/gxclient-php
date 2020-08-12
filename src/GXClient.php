@@ -6,13 +6,14 @@
  * Time: 13:18
  */
 
-namespace Kilmas\GxcRpc;
+namespace GXChain\GXClient;
 
 use Elliptic\EC;
-use Kilmas\GxcRpc\Ecc\Ecc;
-use Kilmas\GxcRpc\Adapter\Http\HttpInterface;
-use Kilmas\GxcRpc\Ecc\Aes;
-use Kilmas\GxcRpc\Ecc\Utils;
+use GXChain\GXClient\Ecc\Signature;
+use GXChain\GXClient\Ecc\Ecc;
+use GXChain\GXClient\Adapter\Http\HttpInterface;
+use GXChain\GXClient\Ecc\Aes;
+use GXChain\GXClient\Ecc\Utils;
 
 class GXClient
 {
@@ -42,7 +43,7 @@ class GXClient
     protected $host;
 
 
-    public function __construct($private_key, $account_id_or_name, $entry_point = "wss://node1.gxb.io", $signProvider = null)
+    public function __construct($private_key = "", $account_id_or_name = "", $entry_point = "wss://node1.gxb.io", $signProvider = null)
     {
         $this->private_key = $private_key;
         $this->account_id_or_name = $account_id_or_name;
@@ -64,10 +65,13 @@ class GXClient
      * @param $brainKey
      * @return array [brainKey: *, privateKey: *, publicKey: *]
      */
-    function generateKey($brainKey)
-    {
+    function generateKey($brainKey = "")
+    {   
         $ec = new EC('secp256k1');
-        $brainKey = $brainKey || $kp = $ec->genKeyPair();
+        
+        if ($brainKey === '') {
+            $brainKey = Ecc::suggestBrainKey();
+        }
         $privateKey = Ecc::seedPrivate($brainKey);;
         $publicKey = Ecc::privateToPublic($privateKey, 'GXC');
         return [
@@ -108,6 +112,17 @@ class GXClient
     }
 
     /**
+     * generate sign data by buff and private key
+     * @param buff
+     * @param privateKey
+     * @return string
+     */
+    function signBuffer($buff, $privateKey)
+    {
+        return Signature::signBuffer($buff, $privateKey);
+    }
+
+    /**
      * register an account by faucet
      * curl ‘https://opengateway.gxb.io/account/register' -H 'Content-type: application/json' -H 'Accept: application/json’ -d ‘{“account”:{“name”:”gxb123”,”owner_key”:”GXC5wQ4RtjouyobBV57vTx7boBj4Kt3BUxZEMsUD3TU369d3C9DqZ”,”active_key”:”GXC7cPVyB9F1Pfiaaxw4nY3xKADo5993hEsTjFs294LKwhqsUrFZs”,”memo_key”:”GXC7cPVyB9F1Pfiaaxw4nY3xKADo5993hEsTjFs294LKwhqsUrFZs”,”refcode”:null,”referrer”:null}}’
      * @param account <String> - Account name
@@ -121,17 +136,14 @@ class GXClient
     function register($account, $activeKey, $ownerKey, $memoKey, $faucet = "https://opengateway.gxb.io")
     {
         if (!$activeKey) {
-            throwException("active key is required");
+            throw new \Exception("active key is required");
         } else {
-            $resp = $this->client->post(`${faucet}/account/register`, [
-                'account' => [
-                    'name' => $account,
-                    'active_key' => $activeKey,
-                    'owner_key' => $ownerKey || $activeKey,
-                    'memo_key' => $memoKey || $activeKey
-                ]
-            ]);
-            return $resp;
+            return $this->client->register($faucet, ['account' => [
+                'name' => $account,
+                'active_key' => $activeKey,
+                'owner_key' => $ownerKey ? $ownerKey : $activeKey,
+                'memo_key' => $memoKey ? $memoKey : $activeKey
+            ]]);
         }
     }
 
@@ -269,17 +281,20 @@ class GXClient
      * @param $broadcast
      * @return mixed
      */
-    function transfer($to, $memo, $amount_asset, $broadcast = false)
+    function transfer($to, $memo, $amount_asset, $broadcast = false, $fee_paying_asset = "GXC")
     {
         $memo_private = $this->private_key;
         $isMemoProvider = false;
-
+        // Check PrivateKey isValid
+        if (!Ecc::isValidPrivate($memo_private)) {
+            throw new \Exception("Not a Valid PrivateKey");
+        }
         // if memo is function, it can receive fromAccount and toAccount, and should return a full memo object
         if (gettype($memo) === "function") {
             $isMemoProvider = true;
         }
         if (!strpos($amount_asset, " ")) {
-            throwException("Incorrect format of asset, eg. \"100 GXC\"");
+            throw new \Exception("Incorrect format of asset, eg. \"100 GXC\"");
         } else {
             $assetArr = explode(" ", $amount_asset);
             $amount = intval($assetArr[0]);
@@ -292,12 +307,16 @@ class GXClient
 
             $toAcc = $this->getAccount($to);
             $assetInfo = $this->getAsset($asset);
+            $fee_asset = $this->getAsset($fee_paying_asset);
 
             if (!$toAcc) {
-                throwException("Account {$to} not exist");
+                throw new \Exception("Account {$to} not exist");
             }
             if (!$assetInfo) {
-                throwException("Asset {$asset} not exist");
+                throw new \Exception("Asset {$asset} not exist");
+            }
+            if (!$fee_asset) {
+                throw new \Exception("Asset {$fee_paying_asset} not exist");
             }
             $amount = [
                 "amount" => $this->_accMult($amount, pow(10, $assetInfo['precision'])),
@@ -321,12 +340,13 @@ class GXClient
                     // $fromPrivate = Ecc::privateToPublic($memo_private);
 
                     if ($memo_from_public != Ecc::privateToPublic($memo_private, 'GXC')) {
-                        throwException("memo signer not exist");
+                        throw new \Exception("memo signer not exist");
                     }
                 }
 
                 if ($memo && $memo_to_public && $memo_from_public) {
                     $nonce = TransactionHelper::unique_nonce_uint64();
+
                     $memo_object = [
                         'from' => $memo_from_public,
                         'to' => $memo_to_public,
@@ -343,8 +363,7 @@ class GXClient
                 try {
                     $memo_object = memo($fromAcc, $toAcc);
                 } catch (\Exception $e) {
-
-                    return;
+                    throw new \Exception($e);
                 }
             }
 
@@ -353,7 +372,7 @@ class GXClient
             $tr->add_operation($tr->get_type_operation("transfer", [
                 'fee' => [
                     'amount' => 0,
-                    'asset_id' => $amount['asset_id']
+                    'asset_id' => $fee_asset['id']
                 ],
                 'from' => $fromAcc['id'],
                 'to' => $toAcc['id'],
@@ -403,7 +422,7 @@ class GXClient
                 [$contract_id, $contract_id, string_to_name($table_name), $start, -1, $limit]
             );
         } else {
-            throwException("Contract not found");
+            throw new \Exception("Contract not found");
         }
     }
 
@@ -417,11 +436,21 @@ class GXClient
      * @param $broadcast
      * @return mixed
      */
-    function createContract($contract_name, $code, $abi, $vm_type = "0", $vm_version = "0", $broadcast = false)
+    function createContract($contract_name, $code, $abi, $vm_type = "0", $vm_version = "0", $broadcast = false, $fee_paying_asset = "GXC")
     {
         $this->_connect();
+
+        $fee_asset = $this->getAsset($fee_paying_asset);
+        if (!$fee_asset) {
+            throw new \Exception("Asset {$fee_paying_asset} not exist");
+        }
+
         $tr = $this->_createTransaction();
         $tr->add_operation($tr->get_type_operation("create_contract", [
+            'fee' => [
+                'amount' => 0,
+                'asset_id' => $fee_asset['id']
+            ],
             'name' => $contract_name,
             'account' => $this->account_id,
             'vm_type' => $vm_type,
@@ -441,15 +470,25 @@ class GXClient
      * @param $broadcast
      * @return mixed
      */
-    function updateContract($contract_name, $newOwner = null, $code, $abi, $broadcast = false)
+    function updateContract($contract_name, $newOwner = null, $code, $abi, $broadcast = false, $fee_paying_asset = "GXC")
     {
         $this->_connect();
+
+        $fee_asset = $this->getAsset($fee_paying_asset);
+        if (!$fee_asset) {
+            throw new \Exception("Asset {$fee_paying_asset} not exist");
+        }
+
         $results[0] = $this->getAccount($contract_name);
         if ($newOwner) {
             $results[1] = $this->getAccount($newOwner);
         }
         $tr = $this->_createTransaction();
         $opt = [
+            'fee' => [
+                'amount' => 0,
+                'asset_id' => $fee_asset['id']
+            ],
             'owner' => $this->account_id,
             'contract' => $results[0]['id'],
             'code' => $code,
@@ -471,12 +510,12 @@ class GXClient
      * @param $broadcast {Boolean} - Broadcast the transaction or just return a serialized transaction
      * @return mixed
      */
-    function callContract($contract_name, $method_name, $params, $amount_asset, $broadcast = false)
+    function callContract($contract_name, $method_name, $params, $amount_asset, $broadcast = false, $fee_paying_asset = "GXC")
     {
         $this->_connect();
         if ($amount_asset) {
             if (!strpos($amount_asset, " ")) {
-                throwException("Incorrect format of asset, eg. \"100 GXC\"");
+                throw new \Exception("Incorrect format of asset, eg. \"100 GXC\"");
             }
         }
         $amount = $amount_asset ? floatval(explode(" ", $amount_asset)[0]) : 0;
@@ -484,10 +523,15 @@ class GXClient
 
         $acc = $this->getAccount($contract_name);
         $assetInfo = $this->getAsset($asset);
+        $fee_asset = $this->getAsset($fee_paying_asset);
 
         if (!$assetInfo) {
-            throwException("Asset {$asset} not exist");
+            throw new \Exception("Asset {$asset} not exist");
         }
+        if (!$fee_asset) {
+            throw new \Exception("Asset {$fee_paying_asset} not exist");
+        }
+
         $amount = [
             'amount' => $this->_accMult($amount, pow(10, $assetInfo['precision'])),
             'asset_id' => $assetInfo['id']
@@ -496,14 +540,14 @@ class GXClient
             $abi = $acc['abi'];
             $act = [
                 'method_name' => $method_name,
-                'data' => \Kilmas\GxcRpc\Gxc\TxSerialize::serializeCallData($method_name, $params, $abi)
+                'data' => \GXChain\GXClient\Gxc\TxSerialize::serializeCallData($method_name, $params, $abi)
             ];
 
             $tr = $this->_createTransaction();
             $opts = [
                 "fee" => [
                     "amount" => 0,
-                    "asset_id" => $amount['asset_id']
+                    "asset_id" => $fee_asset['id']
                 ],
                 "account" => $this->account_id,
                 "contract_id" => $acc['id'],
@@ -517,7 +561,7 @@ class GXClient
             $tr->add_operation($tr->get_type_operation("call_contract", $opts));
             return $this->_processTransaction($tr, $broadcast);
         } else {
-            throwException("Contract not found");
+            throw new \Exception("Contract not found");
         }
     }
 
@@ -533,9 +577,9 @@ class GXClient
         if ($this->_connect()) {
             $_accounts = [];
             foreach ($accounts as $a) {
-                $_account = $this->getAccount($a);
+                $_account = $this->getObject($a);
                 $_accounts[] = $_account;
-                $account_ids [] = $_account['id'];
+                $account_ids[] = $_account['id'];
             }
             $accs = $this->_query("get_objects", [[$this->account_id, "2.0.0"]]);
             $acc = $accs[0];
@@ -543,30 +587,33 @@ class GXClient
             $fee_asset = $this->getAsset($fee_paying_asset);
 
             if (!$acc) {
-                throwException("account_id {$this->account_id} not exist");
+                throw new \Exception("account_id {$this->account_id} not exist");
             }
             if (!$fee_asset) {
-                throwException("asset {$fee_paying_asset} not exist");
+                throw new \Exception("Asset {$fee_paying_asset} not exist");
             }
             $new_options = [
                 'memo_key' => $acc['options']['memo_key'],
                 'voting_account' => empty($acc['options']['voting_account']) ? "1.2.5" : $acc['options']['voting_account']
             ];
-            $results = [];
             $votes = [];
+            $res1 = [];
+            $res2 = [];
             foreach ($account_ids as $account_id) {
-                $results = $this->_query("get_witness_by_account", [$account_id]);
-                $v = $this->_query("get_committee_member_by_account", [$account_id]);
-                $votes[] = $v['vote_id'];
+                $res1[] = $this->_query("get_witness_by_account", [$account_id]);
+                $res2[] = $this->_query("get_committee_member_by_account", [$account_id]);
             }
+            $votes = array_merge($res1, $res2);
+            $votes = array_filter($votes);
+            $votes = array_map(function ($v) {
+                return $v['vote_id'];
+            }, $votes);
             $new_options['votes'] = array_unique(array_merge($votes, $acc['options']['votes']));
-
-
             $num_witness = 0;
             $num_committee = 0;
             foreach ($new_options['votes'] as $v) {
                 $vote_type = explode(":", $v)[0];
-                if ($vote_type == "0") {
+                if ($vote_type == 0) {
                     $num_committee += 1;
                 }
                 if ($vote_type == 1) {
@@ -615,6 +662,147 @@ class GXClient
     }
 
     /**
+     * get staking programs
+     */
+    public function getStakingPrograms()
+    {
+        $result = $this->_query("get_objects", [['2.0.0']]);
+        if (isset($result[0])) {
+            foreach ($result[0]['parameters']['extensions'] as $key => $value) {
+                if ($value[0] == 11) {
+                    return $value[1]['params'];
+                }
+            }
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * @param {String} to - trust node account name
+     * @param {Number} amount - the amount of GXC to staking
+     * @param {String} program_id - the staking program id
+     * @param {Boolean} $broadcast
+     * @param {Array} options[fee_symbol]  - e.g: 'GXC'
+     * @returns {Promise<any>}
+     */
+    public function createStaking($to, $amount, $program_id, $broadcast, $options = ['fee_symbol' => 'GXC'])
+    {
+        $this->_connect();
+        $trustNodeAccount = $this->getAccount($to);
+        if (!$trustNodeAccount) {
+            throw new \Exception("Account {$to} not exist");
+        }
+        $tustNodeInfo = $this->_query("get_witness_by_account", [$trustNodeAccount['id']]);
+        if (!$tustNodeInfo) {
+            throw new \Exception("Account {$to} is not a trustnode");
+        }
+        $program_staking_arr = $this->getStakingPrograms();
+        $program             = [];
+        foreach ($program_staking_arr as $key => $value) {
+            if ($value[0] == $program_id) {
+                $program = $value;
+            }
+        }
+        if (!$program) {
+            throw new \Exception("Program {$program_id} not exist");
+        }
+        if (!$program[1]['is_valid']) {
+            throw new \Exception("Program {$program_id} disabled");
+        }
+
+        $feeInfo = $this->getAsset($options['fee_symbol']);
+
+        if (!$feeInfo) {
+            throw new \Exception("Asset {$options['fee_symbol']} not exist");
+        }
+
+        $amount = intval($amount);
+
+        $tr = $this->_createTransaction();
+
+        $tr->add_operation($tr->get_type_operation("staking_create", [
+            'fee'          => [
+                'amount'   => 0,
+                'asset_id' => $feeInfo['id'],
+            ],
+            'owner'        => $this->account_id,
+            'trust_node'   => $tustNodeInfo['id'],
+            'program_id'   => "{$program_id}",
+            'amount'       => [
+                'amount'   => $this->_accMult($amount, pow(10, 5)),
+                'asset_id' => '1.3.1',
+            ],
+            'weight'       => $program[1]['weight'],
+            'staking_days' => $program[1]['staking_days'],
+        ]));
+        return $this->_processTransaction($tr, $broadcast);
+    }
+    /**
+     * @param {String} to - trust node account name
+     * @param {String} staking_id - the staking id
+     * @param {Boolean} $broadcast
+     * @param {Array} options[fee_symbol]  - e.g: 'GXC'
+     * @returns {Promise<any>}
+     */
+    public function updateStaking($to, $staking_id, $broadcast = false, $options = ['fee_symbol' => 'GXC'])
+    {
+        $this->_connect();
+        $trustNodeAccount = $this->getAccount($to);
+        if (!$trustNodeAccount) {
+            throw new \Exception("Account {$to} not exist");
+        }
+        $tustNodeInfo = $this->_query("get_witness_by_account", [$trustNodeAccount['id']]);
+        if (!$tustNodeInfo) {
+            throw new \Exception("Account {$to} is not a trustnode");
+        }
+        $feeInfo = $this->getAsset($options['fee_symbol']);
+
+        if (!$feeInfo) {
+            throw new \Exception("Asset {$options['fee_symbol']} not exist");
+        }
+
+        $tr = $this->_createTransaction();
+
+        $tr->add_operation($tr->get_type_operation("staking_update", [
+            'fee'        => [
+                'amount'   => 0,
+                'asset_id' => $feeInfo['id'],
+            ],
+            'owner'      => $this->account_id,
+            'trust_node' => $tustNodeInfo['id'],
+            'staking_id' => $staking_id,
+        ]));
+        return $this->_processTransaction($tr, $broadcast);
+    }
+
+    /**
+     * @param {String} staking_id - the staking id
+     * @param {Boolean} $broadcast
+     * @param {Array} options[fee_symbol]  - e.g: 'GXC'
+     * @returns {Promise<any>}
+     */
+    public function claimStaking($staking_id, $broadcast, $options = ['fee_symbol' => 'GXC'])
+    {
+        $this->_connect();
+        $feeInfo = $this->getAsset($options['fee_symbol']);
+
+        if (!$feeInfo) {
+            throw new \Exception("Asset {$options['fee_symbol']} not exist");
+        }
+        $tr = $this->_createTransaction();
+
+        $tr->add_operation($tr->get_type_operation("staking_claim", [
+            'fee'        => [
+                'amount'   => 0,
+                'asset_id' => $feeInfo['id'],
+            ],
+            'owner'      => $this->account_id,
+            'staking_id' => $staking_id,
+        ]));
+        return $this->_processTransaction($tr, $broadcast);
+    }
+    /**
      * accurate multiply - fix the accurate issue of javascript
      * @param arg1
      * @param arg2
@@ -626,14 +814,13 @@ class GXClient
         $m = 0;
         $s1 = (string)$arg1;
         $s2 = (string)$arg2;
-        try {
-            $m += strlen(explode('.', $s1)[1]);
-        } catch (\Exception $e) {
-        }
-        try {
-            $m += strlen(explode(".", $s2)[1]);
-        } catch (\Exception $e) {
-        }
+
+        $arr = explode('.', $s1);
+        isset($arr[1]) ? $m += strlen($arr[1]) : 0;
+
+        $arr = explode('.', $s2);
+        isset($arr[1]) ? $m += strlen($arr[1]) : 0;
+
         return intval(str_replace(".", "", $s1)) * intval(str_replace(".", "", $s2)) / pow(10, $m);
     }
 
@@ -670,7 +857,7 @@ class GXClient
     {
         $tr = null;
         if (!$this->connected) {
-            throwException("_createTransaction have to be invoked after _connect()");
+            throw new \Exception("_createTransaction have to be invoked after _connect()");
         }
         if ($this->signProvider) {
             $tr = new TransactionBuilder($this->signProvider, $this->rpc, $this->chain_id);
@@ -692,7 +879,7 @@ class GXClient
         $tr->update_head_block();
         $tr->set_required_fees();
         if (!$this->signProvider) {
-            $this->private_key && $tr->add_signer(Ecc::wifPrivateToPrivateHex($this->private_key));
+            $this->private_key && $tr->add_signer($this->private_key);
         }
         $tr->set_expire_seconds(self::DEFUALT_EXPIRE_SEC);
         if ($broadcast) {

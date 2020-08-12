@@ -6,11 +6,12 @@
  * Time: 18:43
  */
 
-namespace Kilmas\GxcRpc;
+namespace GXChain\GXClient;
 
-use Kilmas\GxcRpc\Gxc\Operations as ops;
-use Kilmas\GxcRpc\Gxc\Chain\ChainTypes;
-use Kilmas\GxcRpc\Ecc\Signature;
+use GXChain\GXClient\Gxc\Operations as ops;
+use GXChain\GXClient\Gxc\Chain\ChainTypes;
+use GXChain\GXClient\Ecc\Signature;
+use GXChain\GXClient\Ecc\Ecc;
 
 class TransactionBuilder
 {
@@ -84,7 +85,7 @@ class TransactionBuilder
     {
 
         if ($this->tr_buffer) {
-            throwException("already finalized");
+            throw new \Exception("already finalized");
         }
         $r = $this->rpc->query("get_objects", [["2.1.0"]]);
         $this->head_block_time_string = $r[0]['time'];
@@ -114,7 +115,7 @@ class TransactionBuilder
     function id()
     {
         if (!$this->tr_buffer) {
-            throwException("not finalized");
+            throw new \Exception("not finalized");
         }
         return substr(hash('sha256', $this->tr_buffer), 0, 40);
     }
@@ -128,11 +129,10 @@ class TransactionBuilder
     function add_operation($operation)
     {
         if ($this->tr_buffer) {
-            throwException("already finalized");
+            throw new \Exception("already finalized");
         }
-        assert($operation, "operation");
         if (!is_array($operation)) {
-            throwException("Expecting array [operation_id, operation]");
+            throw new \Exception("Expecting array [operation_id, operation]");
         }
         array_push($this->operations, $operation);
     }
@@ -140,15 +140,19 @@ class TransactionBuilder
     function get_type_operation($name, $operation)
     {
         if ($this->tr_buffer) {
-            throwException("already finalized");
+            throw new \Exception("already finalized");
         }
-        assert(isset($name), "name");
-        assert(isset($operation), "operation");
-        // assert(ops::serializer($name), "Unknown operation {$name}");
+        if (!isset($name)) {
+            throw new \Exception("Missing operation name");
+        }
+        if (!isset($operation)) {
+            throw new \Exception("Missing operation params");
+        }
+
         $_type = ops::serializer($name);
         $operation_id = ChainTypes::$operations[$_type->operation_name];
         if ($operation_id === null) {
-            throwException("unknown operation: {$_type->operation_name}");
+            throw new \Exception("unknown operation: {$_type->operation_name}");
         }
         if (empty($operation['fee'])) {
             $operation['fee'] = [
@@ -244,7 +248,7 @@ class TransactionBuilder
     function set_expire_seconds($sec)
     {
         if ($this->tr_buffer) {
-            throwException("already finalized");
+            throw new \Exception("already finalized");
         }
         return $this->expiration = $this->base_expiration_sec() + $sec;
 
@@ -254,14 +258,19 @@ class TransactionBuilder
     function propose($proposal_create_options)
     {
         if ($this->tr_buffer) {
-            throwException("already finalized");
+            throw new \Exception("already finalized");
         }
         if (count($this->operations) < 1) {
-            throwException("add operation first");
+            throw new \Exception("add operation first");
         }
 
-        assert($proposal_create_options, "proposal_create_options");
-        assert($proposal_create_options['fee_paying_account'], "proposal_create_options.fee_paying_account");
+        if (!$proposal_create_options) {
+            throw new \Exception("proposal_create_options");
+        }
+
+        if (!$proposal_create_options['fee_paying_account']) {
+            throw new \Exception("proposal_create_options.fee_paying_account");
+        }
 
         $proposed_ops = [];
         foreach ($this->operations as $op) {
@@ -285,10 +294,10 @@ class TransactionBuilder
     {
         //        var fee_pool;
         if ($this->tr_buffer) {
-            throwException("already finalized");
+            throw new \Exception("already finalized");
         }
         if (!count($this->operations)) {
-            throwException("add operations first");
+            throw new \Exception("add operations first");
         }
         $operations = [];
         for ($i = 0; $i < count($this->operations); $i++) {
@@ -376,31 +385,30 @@ class TransactionBuilder
 
     function add_signer($private_key, $public_key = null)
     {
+        $public_key = Ecc::privateToPublic($private_key, 'GXC');
         array_push($this->signer_private_keys, [$private_key, $public_key]);
     }
 
 
     function sign()
     {
-
         if (!$this->tr_buffer) {
-            throwException("not finalized");
+            throw new \Exception("not finalized");
         }
         if ($this->signed) {
-            throwException("already signed");
+            throw new \Exception("already signed");
         }
 
         if (!$this->signProvider) {
             if (!count($this->signer_private_keys)) {
-                throwException("Transaction was not signed. Do you have a private key? [no_signers]");
+                throw new \Exception("Transaction was not signed. Do you have a private key? [no_signers]");
             }
             $end = count($this->signer_private_keys);
             for ($i = 0; 0 < $end ? $i < $end : $i > $end; 0 < $end ? $i++ : $i++) {
                 list($private_key, $public_key) = $this->signer_private_keys[$i];
                 $sig = Signature::signBuffer(
                     $this->chain_id . bin2hex($this->tr_buffer),
-                    $private_key,
-                    $public_key
+                    $private_key
                 );
                 array_push($this->signatures, $sig);
             }
@@ -427,7 +435,7 @@ class TransactionBuilder
     }
 
     function broadcast()
-    {
+    {   
         if ($this->tr_buffer) {
             return $this->_broadcast();
         } else {
@@ -459,13 +467,13 @@ class TransactionBuilder
             return;
         }
         if (!$this->tr_buffer) {
-            throwException("not finalized");
+            throw new \Exception("not finalized");
         }
         if (!count($this->signatures)) {
-            throwException("not signed");
+            throw new \Exception("not signed");
         }
         if (!count($this->operations)) {
-            throwException("no operations");
+            throw new \Exception("no operations");
         }
         $tr_object = ops::serializer('signed_transaction')->toObject($this);
 
@@ -480,7 +488,9 @@ class TransactionBuilder
     private function timeStringToDate($time_string)
     {
         if (!$time_string)
-            return strtotime("1970-01-01 00:00:00");
+            return strtotime("1970-01-01T00:00:00.000Z");
+        if ($time_string[strlen($time_string) -1] != "Z")
+            $time_string = $time_string . "Z";
         return strtotime($time_string);
     }
 }

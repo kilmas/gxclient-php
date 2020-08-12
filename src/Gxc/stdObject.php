@@ -6,7 +6,7 @@
  * Time: 19:07
  */
 
-namespace Kilmas\GxcRpc\Gxc;
+namespace GXChain\GXClient\Gxc;
 
 class stdObject
 {

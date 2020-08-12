@@ -1,6 +1,6 @@
 <?php
 
-namespace  Kilmas\GxcRpc\Adapter\Http;
+namespace  GXChain\GXClient\Adapter\Http;
 
 interface HttpInterface
 {

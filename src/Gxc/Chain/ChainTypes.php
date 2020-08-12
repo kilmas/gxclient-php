@@ -6,7 +6,7 @@
  * Time=> 0=>55
  */
 
-namespace Kilmas\GxcRpc\Gxc\Chain;
+namespace GXChain\GXClient\Gxc\Chain;
 
 class ChainTypes
 {
@@ -42,7 +42,8 @@ class ChainTypes
         'datasource_copyright' => 22,
         'second_hand_data' => 23,
         'data_transaction_complain' => 24,
-        'lock_balance' => 25
+        'lock_balance' => 25,
+        'staking' => 27,
     ];
     public static $impl_object_type = [
         'global_property' => 0,
@@ -143,6 +144,9 @@ class ChainTypes
         'proxy_transfer' => 73,
         'create_contract' => 74,
         'call_contract' => 75,
-        'update_contract' => 76
+        'update_contract' => 76,
+        'staking_create' => 80,
+        'staking_update' => 81,
+        'staking_claim' => 82,
     ];
 }

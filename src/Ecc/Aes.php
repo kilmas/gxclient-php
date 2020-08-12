@@ -6,7 +6,7 @@
  * Time: 17:21
  */
 
-namespace Kilmas\GxcRpc\Ecc;
+namespace GXChain\GXClient\Ecc;
 
 use Elliptic\EC;
 
@@ -37,7 +37,7 @@ class Aes
     static function fromSeed($seed)
     {
         if ($seed === null) {
-            throwException("seed is required");
+            throw new \Exception("seed is required");
         }
         $_hash = hash('sha512', $seed);
         // _hash = _hash.toString('hex');
@@ -52,9 +52,9 @@ class Aes
     static function fromSha512($hash)
     {
         $strlen = strlen($hash);
-        assert($strlen == 128, `A Sha512 in HEX should be 128 characters long, instead got {$strlen}`);
-//        $iv = encHex.parse(hash.substring(64, 96));
-//        $key = encHex.parse(hash.substring(0, 64));
+        if ($strlen !== 128) {
+            throw new \Exception('A Sha512 in HEX should be 128 characters long, instead got ' . $strlen);
+        }
         $iv = hex2bin(substr($hash, 64, 32));
         $key = hex2bin(substr($hash, 0, 64));
         return new Aes($iv, $key);
@@ -63,7 +63,9 @@ class Aes
     static function fromBuffer($buf)
     {
         $len = strlen($buf);
-        assert($len === 128, `A Sha512 Buffer should be 64 characters long, instead got {$len}`);
+        if ($len !== 128) {
+            throw new \Exception('A Sha512 Buffer should be 64 characters long, instead got ' . $len);
+        }
         return self::fromSha512($buf);
     }
 
@@ -92,7 +94,8 @@ class Aes
 
         try {
             $hash = hash('sha512', hex2bin($S->toString('hex')));
-            $aes = self::fromSeed($nonce . $hash);
+
+            $aes = Aes::fromSeed($nonce . $hash);
 
             $planebuffer = $aes->decrypt($message);
         } catch (\Exception $ex) { // fallback with a shared secret with no padding
@@ -101,19 +104,17 @@ class Aes
         }
 
         if (!(strlen($planebuffer) >= 4)) {
-            throwException("Invalid key, could not decrypt message(1)");
+            throw new \Exception("Invalid key, could not decrypt message(1)");
         }
 
         // DEBUG console.log('... planebuffer',planebuffer)
         $checksum = substr($planebuffer, 0, 4);
         $plaintext = substr($planebuffer, 4);
 
-        $new_checksum = hash('sha256', $plaintext);
-        $new_checksum = substr($new_checksum, 0, 4);
-
+        $new_checksum = hex2bin(substr(hash('sha256', $plaintext), 0, 8));
 
         if (!($checksum === $new_checksum)) {
-            throwException("Invalid key, could not decrypt message(2)");
+            throw new \Exception("Invalid key, could not decrypt message(2)");
         }
 
         return $plaintext;
@@ -140,19 +141,8 @@ class Aes
 
         $S = $key1->derive($key2->getPublic());
 
-
-//        $S = private_key . get_shared_secret_v2($public_key);
-
-        // D E B U G
-        // console.log('encrypt_with_checksum', {
-        //     priv_to_pub: private_key.toPublicKey().toString()
-        //     pub: public_key.toPublicKeyString()
-        //     nonce: nonce
-        //     message: message.length
-        //     S: S.toString('hex')
-        // })
-
         $hash = hash('sha512', hex2bin($S->toString('hex')));
+        
         $aes = Aes::fromSeed($nonce . $hash);
         // DEBUG console.log('... S',S.toString('hex'))
         $checksum = substr(hash('sha256', $message), 0, 8);
@@ -183,7 +173,9 @@ class Aes
      */
     function decrypt($ciphertext)
     {
-        assert($ciphertext, "Missing cipher text");
+        if (!$ciphertext) {
+            throw new \Exception("Missing cipher text");
+        }
         // hex is the only common format
         $hex = $this->decryptHex($ciphertext);
         return $hex;
@@ -214,9 +206,11 @@ class Aes
      */
     function decryptHex($cipher)
     {
-        assert($cipher, "Missing cipher text");
+        if (!$cipher) {
+            throw new \Exception("Missing cipher text");
+        }
         // Convert data into word arrays (used by Crypto)
-        return $plainwords = $this->_decrypt_word_array($cipher);
+        return $plainwords = $this->decryptHexToText($cipher);
     }
 
     /** This method does not use a checksum, the returned data must be validated some other way.
@@ -225,9 +219,11 @@ class Aes
      */
     function decryptHexToBuffer($cipher)
     {
-        assert($cipher, "Missing cipher text");
-        // Convert data into word arrays (used by Crypto)
-        return bin2hex(openssl_decrypt($cipher, 'AES256', $this->key, OPENSSL_RAW_DATA, $this->iv));
+        if (!$cipher) {
+            throw new \Exception("Missing cipher text");
+        }
+
+        return openssl_decrypt(hex2bin($cipher), 'AES256', $this->key, OPENSSL_RAW_DATA, $this->iv);
     }
 
     /** This method does not use a checksum, the returned data must be validated some other way.

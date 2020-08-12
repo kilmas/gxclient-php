@@ -6,7 +6,7 @@
  * Time: 10:18
  */
 
-namespace Kilmas\GxcRpc\Gxc;
+namespace GXChain\GXClient\Gxc;
 
 class ByteBuffer
 {
@@ -63,10 +63,27 @@ class ByteBuffer
     }
 
     public function writeUint64($value)
-    {
+    {   
         $this->offset += 8;
-        $this->hex .= bin2hex(pack('P', $value));
-        $this->pack .= pack('P', $value);
+        if (is_string($value)) {
+            // change uint64 string to bytes
+            $a = $value;
+            $r = "";
+            $hex = "";
+            while($a) {
+                $r = sprintf('%02x%s', bcmod($a, 256), $r);
+                $a = bcdiv($a, 256);
+            }
+            // change to little endian byte order
+            for ($i=strlen($r)-1;$i > 0;$i = $i - 2) {
+                $hex .= $r[$i-1].$r[$i];
+            }
+            $this->hex .= $hex;
+            $this->pack .= hex2bin($hex);
+        } else {
+            $this->hex .= bin2hex(pack('P', $value));
+            $this->pack .= pack('P', $value);
+        }
     }
 
     public function writeInt64($value)

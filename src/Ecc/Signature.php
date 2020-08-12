@@ -6,7 +6,7 @@
  * Time: 13:52
  */
 
-namespace Kilmas\GxcRpc\Ecc;
+namespace GXChain\GXClient\Ecc;
 
 use Elliptic\EC\Signature as ECSignature;
 use Elliptic\HmacDRBG;
@@ -43,7 +43,7 @@ class Signature
             $getNonce = $noncefn;
             $noncefn = function ($counter) use ($getNonce, $message, $privateKey, $data) {
                 $nonce = $getNonce($message, $privateKey, null, $data, $counter);
-                if (!is_string($nonce) || strlen($nonce) !== 64) throwException("messages.ECDSA_SIGN_FAIL");
+                if (!is_string($nonce) || strlen($nonce) !== 64) throw new \Exception("messages.ECDSA_SIGN_FAIL");
                 return new BN($nonce, 16);
             };
         }
@@ -128,21 +128,18 @@ class Signature
     }
 
 
-    public static function signBuffer($buff, $private_key, $public_key)
+    public static function signBuffer($buff, $private_key)
     {
         $dataSha256 = hash('sha256', hex2bin($buff));
-        $privHex = $private_key;
+        $privHex = Ecc::wifPrivateToPrivateHex($private_key);
         $ecdsa = new Signature();
         $nonce = 0;
         while (true) {
+            $options['noncefn'] = function () use ($dataSha256, $nonce) {
+                return hash('sha256', ($dataSha256 . $nonce));
+            };
             // Sign message (can be hex sequence or array)
-            $signature = $ecdsa->sign($dataSha256, $privHex, [
-                'noncefn' => function () use ($dataSha256, $nonce) {
-                    // $ds = new BN($dataSha256, 16);
-                    // return hash('sha256', Buffer::utf8Slice($ds->toArray(), 0, $ds->byteLength()) . $nonce);
-                    return hash('sha256', $dataSha256 . $nonce);
-                }
-            ]);
+            $signature = $ecdsa->sign($dataSha256, $privHex, $options);
             $nonce++;
             $der = $signature->toDER('hex');
             // Switch der

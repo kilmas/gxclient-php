@@ -6,10 +6,10 @@
  * Time: 15:38
  */
 
-namespace Kilmas\GxcRpc;
+namespace GXChain\GXClient;
 
 use GuzzleHttp\Client as Guzzle;
-use Kilmas\GxcRpc\Exception\HttpException;
+use GXChain\GXClient\Exception\HttpException;
 
 class GxcRpc
 {
@@ -43,7 +43,7 @@ class GxcRpc
         }
 
         $arr = json_decode((string)$response->getBody(), true);
-        return isset($arr['result']) ? $arr['result'] : null;
+        return isset($arr['result']) ? $arr['result'] : $arr['error'];
     }
 
     function broadcast($tx)
@@ -59,7 +59,18 @@ class GxcRpc
             throw new HttpException("POST Request failed: {$t->getMessage()}");
         }
         $arr = json_decode((string)$response->getBody(), true);
+        return isset($arr['result']) ? $arr['result'] : $arr['error'];
+    }
 
-        return isset($arr['result']) ? $arr['result'] : null;
+    function register($faucet, $params)
+    {
+        try {
+            $response = $this->client->post($faucet . '/account/register', ['headers' => ['Accept' => 'application/json'], 'json' => $params]);
+        } catch (\Exception $t) {
+            throw new HttpException("POST Request failed: {$t->getMessage()}");
+        }
+
+        $arr = json_decode((string)$response->getBody(), true);
+        return $arr;
     }
 }
