@@ -1,3 +1,6 @@
+## Remind
+Prepare for transfer to official maintenance [gxchain/gxclient-php](https://github.com/gxchain/gxclient-php/)
+
 # gxclient-php
 A client to interact with gxchain implemented in PHP
 <p>
